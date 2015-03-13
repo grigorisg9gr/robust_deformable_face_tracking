@@ -32,7 +32,7 @@ def check_progress(path_folders, message=''):
     number_clips = len(os.listdir(frames_fold))
     number_clips = path_checks(path_folders, frames_fold)
     list_folders = sorted(os.listdir(path_folders))
-    list_to_check = ['1_dlib_pred', '2_dpm', '4_fit_pbaam'] # list of folders we want to check. 
+    list_to_check = ['1_dlib_pred', '2_dpm', '4_fit_pbaam', '5_svm_faces'] # list of folders we want to check.
     for folder in list_to_check:
         if folder in list_folders:
             number_subfolders = len(os.listdir(path_folders + folder + '/'))

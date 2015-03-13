@@ -37,7 +37,7 @@ import numpy as np
 def detection_to_pointgraph(detection):
     return PointCloud(np.array([(p.y, p.x) for p in detection.parts()]))
 
-predictor_dlib = dlib.shape_predictor('/vol/atlas/homes/grigoris/raps_menpo/shape_predictor_68_face_landmarks.dat')
+predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 
 # definition of paths

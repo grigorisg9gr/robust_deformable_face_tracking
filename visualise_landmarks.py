@@ -1,6 +1,4 @@
 
-
-
 from utils import (mkdir_p, check_if_path)
 from utils.pipeline_aux import check_path_and_landmarks
 from utils.visualisation_aux import generate_frames_max_bbox
@@ -39,8 +37,6 @@ render_options = {'colours': [['r', 'b'],
                                 [2, 2]]}
 
 
-
-# path_clips = '/vol/atlas/homes/grigoris/company_videos/competition/grigoris_3/'
 
 def for_each_landmark_folder(fold_landm):
     save_path = save_path_0 + fold_landm + '/'; mkdir_p(save_path)

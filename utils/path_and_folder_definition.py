@@ -10,6 +10,7 @@ path_to_ibug = __p_base_db + 'ibug/'
 path_pascal_base = '/vol/atlas/homes/grigoris/external/VOCdevkit/VOC2007/'
 
 path_pickles = '/vol/atlas/homes/grigoris/company_videos/pickles/'
+path_shape_pred = '/vol/atlas/homes/grigoris/raps_menpo/shape_predictor_68_face_landmarks.dat' # predictor data trained to be used from dlib shape predictor
 
 # confirm that the ones above are valid paths
 from utils import check_if_path
@@ -35,7 +36,7 @@ pts_type_out = '.pts'
 # red = np.array([[1], [0], [0]]); green = np.array([[0], [1], [0]]); blue = np.array([[0], [0], [1]])       # fix the color of the viewer (landmark points)
 # oth_1 = np.array([[1], [1], [0]]); oth_2 = np.array([[1], [0], [1]]); oth_3 = np.array([[0], [1], [1]])
 # colour = [red,green,blue, oth_1,oth_2,oth_3]; col_len = len(colour)
-colour = ['r','b','g',[.2,.4,.8],[.2,.4,.2], [.8,.4,.8],[.6,.0,.3]];
+colour = ['r', 'b', 'g', [.2, .4, .8], [.2, .4, .2], [.8, .4, .8], [.6, .0, .3]]
 col_len = len(colour)
 
 
