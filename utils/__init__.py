@@ -58,7 +58,7 @@ def find_image_type(dirname, fname):
         if type1 in extensions:
             return type1
         else:
-            raise Exception('Not supported type (extension) of image')
+            raise ValueError('%s is not supported type (extension) of image' % type1)
 
 
 def remove_empty_folders(path):

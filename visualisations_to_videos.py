@@ -18,6 +18,7 @@ if __name__ == '__main__':
 # import the function that reads frames and converts them to videos
 sys.path.append('/vol/atlas/homes/grigoris/gits/pyutils/')
 import from_frames_to_videos as fr2vid
+import resize_image as rim
 
 if not check_if_path(path_clips, 'The visualisation path (%s) does not seem to exist' % path_clips):
         exit()
@@ -27,6 +28,8 @@ if not check_if_path(path_clips, 'The visualisation path (%s) does not seem to e
 def call_video_maker(path_clips, vid_fold):
     list_paths = sorted(os.listdir(path_clips))
     for i in list_paths:
+        if i == 'compare':
+            continue
         p1 = path_clips + i + '/'
         # if: a) the video folder exists, b) it has sufficient files, c) overwrite == False, then continue
         if check_if_path(p1) and (not overwrite) and check_if_path(p1 + vid_fold, ''):
@@ -36,6 +39,7 @@ def call_video_maker(path_clips, vid_fold):
                 continue
         remove_empty_folders(p1)
         print i, '  ', len(os.listdir(p1))
+        rim.bulkResize(path_clips + i + '/')
         fr2vid.main(path_clips + i + '/', vid_fold=vid_fold)
 
 

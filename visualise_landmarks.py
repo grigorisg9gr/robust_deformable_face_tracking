@@ -1,6 +1,6 @@
 
 from utils import (mkdir_p, check_if_path)
-from utils.pipeline_aux import check_path_and_landmarks
+from utils.pipeline_aux import (check_path_and_landmarks, check_img_type)
 from utils.visualisation_aux import generate_frames_max_bbox
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
 import os, sys
@@ -27,6 +27,7 @@ figure_size = (10, 8)
 overwrite = True
 save_original = True
 frames_format = '.png'
+
 
 # prwto afora stis original eikones, deutero afora stis cropped
 render_options = {'colours': [['r', 'b'],
@@ -56,6 +57,8 @@ save_path_0 = path_clips + foldvis + '/'; mkdir_p(save_path_0)
 pts_format = ['_0' + pts_type_out]
 path_f = path_clips + frames
 list_clips = sorted(os.listdir(path_f))
+frames_format = check_img_type(list_clips, path_f)
+
 
 for landm in list_landm:
     if not check_if_path(path_clips + landm + '/', ''):

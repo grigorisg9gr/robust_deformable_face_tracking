@@ -85,6 +85,8 @@ for clip in list_clips:
     path_frames = path_f + clip + '/'
     path_landm = []
     for landm in list_landm_f:
+        if not check_if_path(path_clips + landm + '/' + clip + '/', ''):
+            continue
         path_landm.append(path_clips + landm + '/' + clip + '/')
     print(clip)
     save_path_i = save_path_2 + clip + '/'; mkdir_p(save_path_i)
