@@ -58,6 +58,8 @@ def read_public_images(path_to_db, max_images=100, training_images=[], crop_read
     if feat is None:
         feat = no_op
     for i in mio.import_images(path_to_db + '*', verbose=True, max_images=max_images):
+        if not i.has_landmarks:
+            continue
         i = crop_rescale_img(i, crop_reading=crop_reading, pix_thres=pix_thres)
         training_images.append(feat(i)) # append it to the list
     return training_images

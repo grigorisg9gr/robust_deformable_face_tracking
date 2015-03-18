@@ -32,11 +32,13 @@ def call_video_maker(path_clips, vid_fold):
             continue
         p1 = path_clips + i + '/'
         # if: a) the video folder exists, b) it has sufficient files, c) overwrite == False, then continue
-        if check_if_path(p1) and (not overwrite) and check_if_path(p1 + vid_fold, ''):
+        if check_if_path(p1, '') and (not overwrite) and check_if_path(p1 + vid_fold, ''):
             len_clips = len(os.listdir(p1))
             print i, '  ', len(os.listdir(p1)), '  ', len(os.listdir(p1 + vid_fold))
             if len(os.listdir(p1 + vid_fold)) > len_clips-3:
                 continue
+        if not check_if_path(p1, ''):
+            continue
         remove_empty_folders(p1)
         print i, '  ', len(os.listdir(p1))
         rim.bulkResize(path_clips + i + '/')
