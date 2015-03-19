@@ -20,13 +20,11 @@ if __name__ == '__main__':
     else:
         raise RuntimeError('file not called with initial path')
 
-    if args > 2 and args < 6:
-        in_landmarks_train_fol = str(sys.argv[2]) + '/'
-        in_landmarks_test_fol = str(sys.argv[3]) + '/'
-        out_landmarks_fol = str(sys.argv[4]) + '/'
-        print in_landmarks_train_fol, '   ', in_landmarks_test_fol, '   ', out_landmarks_fol
+    if args > 2 and args < 5:
+        in_landmarks_test_fol = str(sys.argv[2]) + '/'
+        out_landmarks_fol = str(sys.argv[3]) + '/'
+        print in_landmarks_test_fol, '   ', out_landmarks_fol
     else:
-        in_landmarks_train_fol = '1_dlib_pred/' # since we are confident that there are few false positives in dlib predictor
         in_landmarks_test_fol = '4_fit_pbaam/'
         out_landmarks_fol = '5_svm_faces/'
 
@@ -35,18 +33,15 @@ from menpo.feature import no_op, fast_dsift #double_igo
 feat = fast_dsift
 patch_s = (12, 12)
 crop_reading = 0.2
-pix_thres=130
+pix_thres=170
 
 
-
-path_init_sh = path_0 + in_landmarks_train_fol
 path_clips = path_0 + frames
 path_read_sh = path_0 + in_landmarks_test_fol
 path_new_fit_vid = path_0 + foldvis + out_landmarks_fol; mkdir_p(path_new_fit_vid)
 path_fitted_aam = path_0 + out_landmarks_fol; mkdir_p(path_fitted_aam)
 path_pickle_svm = path_pickles + 'general_svm/'; mkdir_p(path_pickle_svm)
 img_type     = '.png'
-group_in     = 'In_detector'; group_out = 'shape_out'
 
 
 import xml.etree.ElementTree as ET
@@ -206,7 +201,7 @@ def process_clip(clip_name, refFrame):
 
 
 def load_or_train_svm():
-    name_p = feat.__name__ + '_' + str(patch_s[0]) + '_' + str(crop_reading) + '_' + str(pix_thres) + '_' + 'helen_' + 'ibug'
+    name_p = feat.__name__ + '_' + str(patch_s[0]) + '_' + str(crop_reading) + '_' + str(pix_thres) + '_' + 'helen_' + 'ibug_' + 'lfpw'
     try:
         from sklearn.externals import joblib
         clf1 = joblib.load(path_pickle_svm + name_p + '.pkl')
@@ -216,10 +211,11 @@ def load_or_train_svm():
         # read the images from the public databases (ibug, helen)
         print('Loading Images ...')
         training_pos_im_1 = read_public_images(path_to_ibug, max_images=130, training_images=[], crop_reading=crop_reading, pix_thres=pix_thres, feat=feat)
-        training_pos_im_1 = read_public_images(path_to_helen, max_images=220, training_images=training_pos_im_1, crop_reading=crop_reading, pix_thres=pix_thres, feat=feat)
+        training_pos_im_1 = read_public_images(path_to_helen, max_images=420, training_images=training_pos_im_1, crop_reading=crop_reading, pix_thres=pix_thres, feat=feat)
+        training_pos_im_1 = read_public_images(path_to_lfpw, max_images=100, training_images=training_pos_im_1, crop_reading=crop_reading, pix_thres=pix_thres, feat=feat)
 
         path_faces = path_pascal_base + 'grigoris_processing/' + '1_ocv_pred/'
-        training_neg_im, cnt = pascal_db_non_faces(path_pascal_base, path_faces, max_loaded_images=500)
+        training_neg_im, cnt = pascal_db_non_faces(path_pascal_base, path_faces, max_loaded_images=600)
 
         # Procrustes analysis
         print('\nPerforming Procrustes analysis for alignment of the training images')
@@ -232,8 +228,8 @@ def load_or_train_svm():
         posim_l, _, refFrame1 = warp_all_to_reference_shape(training_pos_im_1, mean_shape)
         negim_l, _, refFrame1 = warp_all_to_reference_shape(training_neg_im, mean_shape)
 
-        posim_nd = list_to_nd_patches(posim_l)
-        negim_nd = list_to_nd_patches(negim_l)
+        posim_nd = list_to_nd_patches(posim_l, patch_s)
+        negim_nd = list_to_nd_patches(negim_l, patch_s)
 
         from sklearn import svm
         print('\nTraining SVM')

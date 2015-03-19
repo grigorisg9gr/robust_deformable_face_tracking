@@ -38,7 +38,7 @@ echo $PATH1
   echo 'converting to videos all frames written during the different steps' 
   #date  > date_whole_framework
   echo 'finished'
-  $PYTHON_P completion_mail.py  $PATH1
+  $PYTHON_P completion_mail.py  $PATH1 $S1_DL $S2_DPM $S4_AAM $S5_SVM $S6_AAM
 }
 
 

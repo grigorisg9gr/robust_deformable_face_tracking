@@ -33,8 +33,8 @@ features = fast_dsift
 patch_shape = (18,18) #(14,14)
 crop_reading = 0.2 # 0.5
 pix_thres = 250
+diagonal_aam = 130
 
-group_in     = 'In_detector'; group_out = 'shape_out'
 path_clips   = path_0 + frames 
 path_init_sh = path_0 + in_landmarks_fol
 path_new_fit_vid = path_0 + foldvis + out_landmarks_fol; mkdir_p(path_new_fit_vid) #grigoris, check an ayta ta mkdir xreiazontai, afoy thewrhtika dhmioyrgei olo to path
@@ -71,9 +71,9 @@ def process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path)
             # viewer.figure.savefig(path_all_clip + name + img_type_out)
             plt.close(rand)
         return
-    im.landmarks[group_in] = ln # initial detector
+    im.landmarks['PTS2'] = ln # initial detector
     if im.n_channels == 3: im = im.as_greyscale(mode='luminosity')
-    fr = fitter.fit(im, im.landmarks[group_in].lms, gt_shape=None, crop_image=0.3)
+    fr = fitter.fit(im, im.landmarks['PTS2'].lms, gt_shape=None, crop_image=0.3)
     res_im = fr.fitted_image
 
     mio.export_landmark_file(res_im.landmarks['final'], pts_folder + frame_name[:-4] + '_0.pts', overwrite=True)
@@ -121,7 +121,7 @@ def process_clip(clip_name):
     list_frames = sorted(os.listdir(frames_path)) # re-read frames, in case they are cut, re-arranged in loading
     
     print('\nBuilding Part based AAM for the clip ' + clip_name)
-    aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=130,
+    aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=diagonal_aam,
                             normalize_parts=normalize_parts, scales=scales).build(training_detector, verbose=True)
     n_channels = aam.appearance_models[0].mean().n_channels
     del training_detector

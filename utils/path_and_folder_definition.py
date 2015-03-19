@@ -7,6 +7,8 @@ __p_base_db = '/vol/atlas/databases/'
 # paths of public databases used for trainings
 path_to_helen = __p_base_db + 'helen/trainset/' # helen trainset
 path_to_ibug = __p_base_db + 'ibug/'
+path_to_lfpw = __p_base_db + 'lfpw/trainset/'
+path_to_cofw = '/vol/atlas/homes/grigoris/external/cofw/frames/trainset/'
 path_pascal_base = '/vol/atlas/homes/grigoris/external/VOCdevkit/VOC2007/'
 
 path_pickles = '/vol/atlas/homes/grigoris/company_videos/pickles/'
@@ -17,7 +19,8 @@ from utils import check_if_path
 def __db_p(path, db_name):
     return check_if_path(path, 'The database %s is not in the path provided (%s).' % (db_name, path))
 
-if not (__db_p(path_to_helen, 'helen') and __db_p(path_to_ibug, 'ibug') and __db_p(path_pascal_base, 'pascal')):
+if not (__db_p(path_to_helen, 'helen') and __db_p(path_to_ibug, 'ibug') and __db_p(path_pascal_base, 'pascal'))\
+        and (__db_p(path_to_lfpw, 'lfpw')):
     print('Potential problem if one of the databases are not in the path provided.')
 
 

@@ -223,8 +223,8 @@ def process_clip(clip_name):
     posim_l, _, refFrame = warp_all_to_reference_shape(training_pos_im, mean_shape)
     negim_l, _, refFrame = warp_all_to_reference_shape(training_neg_im, mean_shape)
 
-    posim_nd = list_to_nd_patches(posim_l)
-    negim_nd = list_to_nd_patches(negim_l)
+    posim_nd = list_to_nd_patches(posim_l, patch_s)
+    negim_nd = list_to_nd_patches(negim_l, patch_s)
     
     from sklearn import svm
     print('\nTraining SVM for clip %s' % clip_name)

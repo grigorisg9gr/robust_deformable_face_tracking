@@ -1,9 +1,17 @@
 import sys, os
 if __name__ == '__main__':
-    if len(sys.argv)>1:
+    args = len(sys.argv)
+    if args > 1:
         path_clips = str(sys.argv[1])
     else:
         raise RuntimeError('file not called with initial path')
+
+    list_to_check = []
+    if args > 2: # all translated as paths of landmarks to be saved
+        for i in range(2, args):
+            list_to_check.append(sys.argv[i])
+    else:
+        list_to_check = ['1_dlib_pred', '2_dpm', '4_fit_pbaam', '5_svm_faces']
 
 sys.path.append('/vol/atlas/homes/grigoris/auxiliary/python_tools/more/'); from send_mail import * 
 #from datetime import datetime
@@ -27,12 +35,12 @@ def path_checks(path_folders, frames_fold):
 
 def check_progress(path_folders, message=''):
     import os, sys
-    message += path_folders + '  :\n\n';
+    message += path_folders + '  :\n\n'
     frames_fold = path_folders + 'frames/'  # the folder/path where the initial frames are. 
     number_clips = len(os.listdir(frames_fold))
     number_clips = path_checks(path_folders, frames_fold)
     list_folders = sorted(os.listdir(path_folders))
-    list_to_check = ['1_dlib_pred', '2_dpm', '4_fit_pbaam', '5_svm_faces'] # list of folders we want to check.
+
     for folder in list_to_check:
         if folder in list_folders:
             number_subfolders = len(os.listdir(path_folders + folder + '/'))
