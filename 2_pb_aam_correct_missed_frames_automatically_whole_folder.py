@@ -16,10 +16,12 @@ if __name__ == '__main__':
 
     if args > 3:
         in_landmarks_fol = str(sys.argv[2]) + '/'
-        out_landmarks_fol = str(sys.argv[3]) + '/'
+        in_landmarks_fol_test = str(sys.argv[3]) + '/'
+        out_landmarks_fol = str(sys.argv[4]) + '/'
         print in_landmarks_fol, '   ', out_landmarks_fol
     else:
         in_landmarks_fol = '5_svm_faces/'
+        in_landmarks_fol_test = '5_svm_faces/'
         out_landmarks_fol = '6_fit_pbaam/'
 
 
@@ -37,6 +39,7 @@ pix_thres = 250
 group_in     = 'In_detector'; group_out = 'shape_out'
 path_clips   = path_0 + frames 
 path_init_sh = path_0 + in_landmarks_fol
+path_read_sh = path_0 + in_landmarks_fol_test
 path_new_fit_vid = path_0 + foldvis + out_landmarks_fol; mkdir_p(path_new_fit_vid) #grigoris, check an ayta ta mkdir xreiazontai, afoy thewrhtika dhmioyrgei olo to path
 path_fitted_aam = path_0 + out_landmarks_fol; mkdir_p(path_fitted_aam)
 
@@ -51,6 +54,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from random import randint
 from joblib import Parallel, delayed
+import shutil
 
 
 def process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path): #, frames_path, path_all_clip, pts_folder, clip_name, fitter
@@ -63,6 +67,12 @@ def process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path)
     im = mio.import_image(img_path, normalise=True)
     try:
         ln = mio.import_landmark_file(path_init_sh + clip_name + '/' + name + '_0.pts')
+        shutil.copy2(path_init_sh + clip_name + '/' + name + '_0.pts', pts_folder + name + '_0.pts')
+        return      # if the landmark already exists, return (for performance improvement)
+    except:
+        pass
+    try:
+        ln = mio.import_landmark_file(path_read_sh + clip_name + '/' + name + '_0.pts')
     except:
         if visual == 1:
             viewer = im.view()
@@ -75,7 +85,7 @@ def process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path)
     fr = fitter.fit(im, im.landmarks[group_in].lms, gt_shape=None, crop_image=0.3)
     res_im = fr.fitted_image
 
-    mio.export_landmark_file(res_im.landmarks['final'], pts_folder + frame_name[:-4] + '_0.pts', overwrite=True)
+    mio.export_landmark_file(res_im.landmarks['final'], pts_folder + name + '_0.pts', overwrite=True)
     # plt.figure(rand) # ONLY need to create fig in every iteration, IF frames of the same video are plotted in parallel
     if visual == 1:
         res_im.crop_to_landmarks_proportion_inplace(0.3, group='final') # works, verified

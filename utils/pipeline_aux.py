@@ -17,7 +17,7 @@ def check_img_type(list_clips, path_clips, cnt=0):
     images in that clip, reads the     first from the clip to define the extension.
     It uses the find_image_type(). If the list_clips is empty, it returns a default type.
     """
-    from utils import find_image_type
+    from .__init__ import find_image_type
     if len(list_clips) > cnt:
         p1 = path_clips + list_clips[cnt]
         l1 = os.listdir(p1)
@@ -34,7 +34,11 @@ def crop_rescale_img(im, crop_reading=0.3, pix_thres=230):
     Auxiliary function that performs simple modification to an image:
     1) makes it greyscale,2) crops it around landmarks (group='PTS'), 3) rescales it
     """
-    im.crop_to_landmarks_proportion_inplace(crop_reading)
+    try:
+        im.crop_to_landmarks_proportion_inplace(crop_reading)
+    except ValueError:
+        print('The image has %d groups of landmarks, could not perform cropping.' % im.landmarks.n_groups)
+        return im
     if im.n_channels == 3:                                   # convert images to greyscale if they are not
         im = im.as_greyscale(mode='luminosity')
     if im.shape[0] > pix_thres or im.shape[1] > pix_thres:    # check that the images are not too big, otherwise resize them
@@ -114,7 +118,7 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
     return training_images
 
 
-from utils import check_if_path
+from .__init__ import check_if_path
 def check_path_and_landmarks(frames_path, clip_name, landmark_path):
     """
     Checks for a valid path for frames and the existence of the respective landmark folder.

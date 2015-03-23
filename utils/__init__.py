@@ -75,3 +75,23 @@ def remove_empty_folders(path):
         if len(os.listdir(p1)) == 0:
             print('The folder %s is empty, removing' % fol)
             rm_if_exists(p1)
+
+
+def print_fancy(str1, str_after='\n'):
+    """
+    Function that prints the selected message (str1) surrounded by lines.
+    :param str1:            The main message that will be printed.
+    :param str_after:       (optional) Print empty lines after the main message.
+    :return:
+    """
+    len_str = len(str1)
+    if len(str1) <= 0:
+        pass
+    else:
+        len_str += 4
+        horiz_line = ['-']*len_str
+        s = ''.join(horiz_line)
+        print(s)
+        print('| ' + str1 + ' |')
+        print(s)
+    print(str_after)

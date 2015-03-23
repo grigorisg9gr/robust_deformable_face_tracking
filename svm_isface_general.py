@@ -6,7 +6,7 @@ mpl.use('Agg')                     # in the beginning of the program. http://sta
 
 import sys, os
 import menpo.io as mio
-from utils import (mkdir_p, check_if_path)
+from utils import (mkdir_p, print_fancy)
 from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
 import shutil
@@ -41,7 +41,6 @@ path_read_sh = path_0 + in_landmarks_test_fol
 path_new_fit_vid = path_0 + foldvis + out_landmarks_fol; mkdir_p(path_new_fit_vid)
 path_fitted_aam = path_0 + out_landmarks_fol; mkdir_p(path_fitted_aam)
 path_pickle_svm = path_pickles + 'general_svm/'; mkdir_p(path_pickle_svm)
-img_type     = '.png'
 
 
 import xml.etree.ElementTree as ET
@@ -56,12 +55,21 @@ def has_person(path):
 
 
 import glob
-def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JPEGImages/', 
-              training_images=[], max_loaded_images=None, pix_thres=150):
-    ''' Loads the non-face images. Specifically it loads the images of PASCAL VOC Challenge 2007 and the 
-        landmarks that are mistakenly predicted as faces by OpenCV (different script). It parses them based 
-        on the list of non_faces that are false positives (OpenCV). It is much faster than the other version.'''
-    # max_loaded_images -> in case we want to load up to max images for performance reasons
+def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JPEGImages/',
+                        max_loaded_images=None, pix_thres=150):
+    """
+    Loads the non-face images of PASCAL VOC Challenge 2007 and the  landmarks that are mistakenly predicted as faces
+    by OpenCV (different script). It parses them based  on the list of non_faces that are false positives (OpenCV).
+
+    :param base_path:           Main path where the pascal files (images, annotations are).
+    :param path_faces:          Path of the 'faces' as detected in PASCAL VOC.
+    :param annot:               (optional) Folder name for original annotations' folder.
+    :param im_fold:             (optional) Folder name for images.
+    :param max_loaded_images:   (optional) Number of 'faces' to be loaded.
+    :param pix_thres:           (optional) Pixel threshold for the dimensions.
+    :return:
+    """
+
     list_non_faces = sorted(os.listdir(path_faces))
     im_path = base_path + im_fold; anno_path = base_path + annot
     if max_loaded_images==None: 
@@ -209,7 +217,7 @@ def load_or_train_svm():
         return clf1, refFrame1
     except:         # if it doesn't exist, we should train the model
         # read the images from the public databases (ibug, helen)
-        print('Loading Images ...')
+        print('Loading Images')
         training_pos_im_1 = read_public_images(path_to_ibug, max_images=130, training_images=[], crop_reading=crop_reading, pix_thres=pix_thres, feat=feat)
         training_pos_im_1 = read_public_images(path_to_helen, max_images=420, training_images=training_pos_im_1, crop_reading=crop_reading, pix_thres=pix_thres, feat=feat)
         training_pos_im_1 = read_public_images(path_to_lfpw, max_images=100, training_images=training_pos_im_1, crop_reading=crop_reading, pix_thres=pix_thres, feat=feat)
@@ -241,11 +249,11 @@ def load_or_train_svm():
         # train SVM
         clf1 = svm.LinearSVC(class_weight='auto', C=1).fit(tr_data, tr_class)
         _t = joblib.dump(clf1, path_pickle_svm + name_p + '.pkl')
-        refFrame1 = joblib.dump(refFrame1, path_pickle_svm + name_p + '_refFrame.pkl')
+        _t2 = joblib.dump(refFrame1, path_pickle_svm + name_p + '_refFrame.pkl')
         return clf1, refFrame1
 
 
-
+print_fancy('Training SVMs trained on public datasets')
 clf, refFrame = load_or_train_svm()
 list_done=[]
 #list_done =['830386', '821238', '830844', '2Girls1Cup_crazy_reaction_1', '830183']; 

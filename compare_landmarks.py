@@ -37,10 +37,10 @@ frames_format = '.png'
 # prwto afora stis original eikones, deutero afora stis cropped
 render_options = {'colours':    [colour,
                                  colour],
-                  'sizes':      [[5, 5, 5, 5, 5, 5, 5],
-                                 [10, 10, 10, 10, 10, 10, 10]],
-                  'edgesizes':  [[1, 1, 1, 1, 1, 1, 1],
-                                 [2, 2, 2, 2, 2, 2, 2]]}
+                  'sizes':      [[3]*10,
+                                 [5]*10],
+                  'edgesizes':  [[1]*10,
+                                 [2]*10]}
 
 
 

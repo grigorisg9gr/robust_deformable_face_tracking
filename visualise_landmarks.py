@@ -33,7 +33,7 @@ frames_format = '.png'
 render_options = {'colours': [['r', 'b'],
                               ['r', 'b']],
                   'sizes': [[3, 3],
-                            [7, 7]],
+                            [5, 5]],
                   'edgesizes': [[1, 1],
                                 [2, 2]]}
 

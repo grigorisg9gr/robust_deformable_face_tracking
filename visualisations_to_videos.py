@@ -41,8 +41,20 @@ def call_video_maker(path_clips, vid_fold):
             continue
         remove_empty_folders(p1)
         print i, '  ', len(os.listdir(p1))
-        rim.bulkResize(path_clips + i + '/')
+        if len(os.listdir(p1)) == 0:
+            continue
+        try:
+            rim.bulkResize(path_clips + i + '/')
+        except TypeError as e:
+            print('Probably there is a folder with no images (%s), skipping it.' % (path_clips + i + '/'))
+            print(e)
+            continue
+        except IOError as e:
+            print('Probably image not found, skipping this video')
+            print(e)
+            continue
         fr2vid.main(path_clips + i + '/', vid_fold=vid_fold)
+    remove_empty_folders(path_clips)
 
 
 # call from parent folder of visualisations, it will make videos for all different steps of the algorithm
