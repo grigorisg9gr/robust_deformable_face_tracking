@@ -18,8 +18,8 @@ if __name__ == '__main__':
         raise RuntimeError('file not called with initial path')
 
     if args > 2 and args < 5:
-        out_landmarks_fol = str(sys.argv[2]) + '/'
-        out_bb_fol = str(sys.argv[3]) + '/'
+        out_landmarks_fol = str(sys.argv[3]) + '/'
+        out_bb_fol = str(sys.argv[2]) + '/'
         print out_landmarks_fol, '   ', out_bb_fol
     else:
         out_landmarks_fol = '1_dlib_pred/'

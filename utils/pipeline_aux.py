@@ -86,6 +86,9 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
     shuffle(list_frames)            # shuffle the list to ensure random ones are chosen
     if max_images is None:
         max_images = len(list_frames)
+    elif max_images < 0:
+        print('Warning: The images cannot be negative, loading the whole list instead.')
+        max_images = len(list_frames)
     cnt = 0 # counter for images appended to the list
     for i, frame_name in enumerate(list_frames):
         name = frame_name[:-4]          # name of the image without the extension
