@@ -1,4 +1,4 @@
-import sys
+import sys, os
 from mock import patch
 
 
@@ -30,7 +30,7 @@ def init_imports():
     except:
         return -1
 
-
+fake_path = '/tmp/test.fake/'
 
 def test_init_functions():
     assert(init_imports() == 1)   # confirm that all imports work
@@ -43,20 +43,50 @@ def test_init_functions():
         output = out.getvalue().strip()
         assert(output == msg)
 
+    assert(check_if_path('.', '') is True) # should return True, since this is a path
+
     # fake_path = '/tmp/test.fake/'
     # tt = check_if_path(fake_path, '')
     # mock1.assert_called_once_with(fake_path)
 
-
+from .pipeline_aux import *
+# @patch.object(pipeline_aux, 'load_images')
 def test_pipeline_aux():
+# def test_pipeline_aux(mock_load):
     from menpo.image import Image
     import numpy as np
     from menpo.shape import PointCloud
     test_img = Image(np.random.random([100, 100]))
     test_img.landmarks['PT'] = PointCloud([[20, 20], [20, 40], [40, 80], [40, 20]])
-    from .pipeline_aux import *
 
     res_im = crop_rescale_img(test_img.copy())      # crop image and check reduced shapes
     assert(res_im.shape[0] < test_img.shape[0])
     assert(res_im.shape[1] < test_img.shape[1])
+
+    # print os.listdir('.')
+    # with captured_output() as (out, err):
+    #     load_images(os.listdir('.'), fake_path, fake_path, '', max_images=-5) # check for negative images
+    #     output = out.getvalue().strip()
+    #     assert('negative' in output)
+    # print output
+
+def test_pipeline_aux_load_images():
+
+    with patch('sys.stdout', new=StringIO()) as fake_out:
+        load_images(os.listdir('.'), '.', '.', '', max_images=-5) # check for negative number of images
+        assert('negative' in fake_out.getvalue())
+        assert('Ignoring' in fake_out.getvalue())                 # since python files are here, at least once it should fail to read an image
+
+    with patch('sys.stdout', new=StringIO()) as fake_out:         # check for positive number of images
+        load_images(os.listdir('.'), '.', '.', '', max_images=5)
+        assert('negative' not in fake_out.getvalue())
+
+    with patch('sys.stdout', new=StringIO()) as fake_out:         # check for not valid path
+        if not os.path.isdir(fake_path):
+            load_images(os.listdir('.'), fake_path, fake_path, '', max_images=5)
+            print fake_out
+            assert('not a valid path' in fake_out.getvalue())
+
+
+
 

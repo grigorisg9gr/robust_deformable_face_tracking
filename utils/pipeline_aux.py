@@ -46,15 +46,28 @@ def crop_rescale_img(im, crop_reading=0.3, pix_thres=230):
     return im    # necessary to return
 
 
+from .__init__ import check_if_path
+def check_path_and_landmarks(frames_path, clip_name, landmark_path):
+    """
+    Checks for a valid path for frames and the existence of the respective landmark folder.
+    If one of them does not exist, it returns False.
+    It uses the check_if_path().
+    """
+    msg1 = 'Skipped clip ' + clip_name + ' because it is not a valid path'
+    msg2 = 'Skipped clip ' + clip_name + ' because it does not have previous landmarks'
+    return check_if_path(frames_path, msg1) and check_if_path(landmark_path, msg2)
+
+
 def read_public_images(path_to_db, max_images=100, training_images=[], crop_reading=0.3, pix_thres=330, feat=None):
     """
-    Read images from databases that are public. The landmarks are expected to be in the same folder.
-    ARGS:
-    path_to_db:     Path to the folder of images. The landmark files are expected to be in the same folder
-    max_images:     Max images that will be loaded from this database. Menpo will try to load as many as requested (if they exist)
-    crop_reading:   Amount of cropping the image around the landmarks
-    pix_thres:      If the cropped image has a dimension bigger than this, it gets cropped to this diagonal dimension
-    feat:           Any features to be applied to the images before inserting them to the list
+    Read images from public databases. The landmarks are expected to be in the same folder.
+    :param path_to_db:          Path to the folder of images. The landmark files are expected to be in the same folder.
+    :param max_images:          Max images that will be loaded from this database. Menpo will try to load as many as requested (if they exist).
+    :param training_images:     (optional) List of images to append the new ones.
+    :param crop_reading:        (optional) Amount of cropping the image around the landmarks.
+    :param pix_thres:           (optional) If the cropped image has a dimension bigger than this, it gets cropped to this diagonal dimension.
+    :param feat:                (optional) Features to be applied to the images before inserting them to the list.
+    :return:                    List of menpo images.
     """
     import menpo.io as mio
     if not(os.path.isdir(path_to_db)):
@@ -69,22 +82,24 @@ def read_public_images(path_to_db, max_images=100, training_images=[], crop_read
     return training_images
 
 
-
 def load_images(list_frames, frames_path, path_land, clip_name, max_images=None, training_images=[], crop_reading=0.3, pix_thres=330, feat=None):
     """
     Read images from the clips that are processed. The landmarks can be a different folder with the extension of pts and
     are searched as such.
-    ARGS:
-    frames_path:    Path to the folder of images (no check)
-    path_land:      Path of the respective landmarks (no check)
-    list_frames:    List of images that will be read and loaded
-    clip_name:      The name of the clip being processed
-    max_images:     Max images that will be loaded from this clip. Menpo will try to load as many as requested (if they exist)
-    crop_reading:   Amount of cropping the image around the landmarks
-    pix_thres:      If the cropped image has a dimension bigger than this, it gets cropped to this diagonal dimension
-    feat:           Any features to be applied to the images before inserting them to the list
+    :param list_frames:         List of images that will be read and loaded.
+    :param frames_path:         Path to the folder of images.
+    :param path_land:           Path of the respective landmarks.
+    :param clip_name:           The name of the clip being processed.
+    :param max_images:          (optional) Max images that will be loaded from this clip.
+    :param training_images:     (optional) List of images to append the new ones.
+    :param crop_reading:        (optional) Amount of cropping the image around the landmarks.
+    :param pix_thres:           (optional) If the cropped image has a dimension bigger than this, it gets cropped to this diagonal dimension.
+    :param feat:                (optional) Features to be applied to the images before inserting them to the list.
+    :return:                    List of menpo images.
     """
     from random import shuffle
+    if not check_path_and_landmarks(frames_path, clip_name, path_land):
+        return []
     if feat is None:
         feat = no_op
     shuffle(list_frames)            # shuffle the list to ensure random ones are chosen
@@ -117,14 +132,3 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
             break # the limit of images (appended to the list) is reached
     return training_images
 
-
-from .__init__ import check_if_path
-def check_path_and_landmarks(frames_path, clip_name, landmark_path):
-    """
-    Checks for a valid path for frames and the existence of the respective landmark folder.
-    If one of them does not exist, it returns False.
-    It uses the check_if_path().
-    """
-    msg1 = 'Skipped clip ' + clip_name + ' because it is not a valid path'
-    msg2 = 'Skipped clip ' + clip_name + ' because it does not have previous landmarks'
-    return check_if_path(frames_path, msg1) and check_if_path(landmark_path, msg2)
