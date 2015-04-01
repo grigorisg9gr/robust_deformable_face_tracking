@@ -7,7 +7,10 @@ import os
 import menpo.io as mio
 from menpo.feature import no_op
 import glob
-import shutil
+try:    ##### TODO: correct this hack with the proper way
+    from robust_detection_and_localisation.utils import (check_if_path, find_image_type)
+except:
+    from utils import (check_if_path, find_image_type)
 
 img_type = '.png'
 def check_img_type(list_clips, path_clips, cnt=0):
@@ -17,13 +20,16 @@ def check_img_type(list_clips, path_clips, cnt=0):
     images in that clip, reads the     first from the clip to define the extension.
     It uses the find_image_type(). If the list_clips is empty, it returns a default type.
     """
-    from .__init__ import find_image_type
+    global img_type
+    if not check_if_path(path_clips):
+        return img_type
     if len(list_clips) > cnt:
         p1 = path_clips + list_clips[cnt]
+        if not check_if_path(p1):
+            return img_type
         l1 = os.listdir(p1)
         if len(l1) == 0:
             raise RuntimeError('The path (%s) seems to be empty, so cannot find images or their extension' % p1)
-        global img_type
         img_type = '.' + find_image_type(p1, l1[0])
         return img_type
     return img_type
@@ -46,7 +52,6 @@ def crop_rescale_img(im, crop_reading=0.3, pix_thres=230):
     return im    # necessary to return
 
 
-from .__init__ import check_if_path
 def check_path_and_landmarks(frames_path, clip_name, landmark_path):
     """
     Checks for a valid path for frames and the existence of the respective landmark folder.
@@ -102,7 +107,7 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
         return []
     if feat is None:
         feat = no_op
-    shuffle(list_frames)            # shuffle the list to ensure random ones are chosen
+    #shuffle(list_frames)            # shuffle the list to ensure random ones are chosen
     if max_images is None:
         max_images = len(list_frames)
     elif max_images < 0:

@@ -33,6 +33,9 @@ visual = 0              # whether the landmarks should be exported during the pr
 img_type_out = '.png'   # extension (and type) of the images that will be exported
 pts_type_out = '.pts'
 
+list_done=[]            # clips that should not be processed
+#list_done =['830386', '821238', '830844', '2Girls1Cup_crazy_reaction_1', '830183'];
+
 # definition of colours for visualisation
 # OLD visualisations:
 # import numpy as np
@@ -41,5 +44,13 @@ pts_type_out = '.pts'
 # colour = [red,green,blue, oth_1,oth_2,oth_3]; col_len = len(colour)
 colour = ['r', 'b', 'g', 'c', 'm', 'k', 'w']
 col_len = len(colour)
+
+# prwto afora stis original eikones, deutero afora stis cropped
+render_options = {'colours':    [colour,
+                                 colour],
+                  'sizes':      [[2]*10,
+                                 [2]*10],
+                  'edgesizes':  [[1]*10,
+                                 [2]*10]}
 
 

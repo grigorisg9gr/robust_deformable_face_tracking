@@ -7,7 +7,7 @@ mpl.use('Agg')                     # in the beginning of the program. http://sta
 import sys, os
 import menpo.io as mio
 from utils import (mkdir_p, print_fancy)
-from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images)
+from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
 import shutil
 
@@ -255,13 +255,11 @@ def load_or_train_svm():
 
 print_fancy('Training SVMs trained on public datasets')
 clf, refFrame = load_or_train_svm()
-list_done=[]
-#list_done =['830386', '821238', '830844', '2Girls1Cup_crazy_reaction_1', '830183']; 
 list_clips = sorted(os.listdir(path_clips))
 img_type = check_img_type(list_clips, path_clips)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
 
 [process_clip(clip_name, refFrame) for clip_name in list_clips
-     if not((clip_name in list_done))];
+ if not(clip_name in list_done)]
 
 
 

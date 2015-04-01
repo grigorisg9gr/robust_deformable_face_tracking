@@ -72,7 +72,11 @@ def generate_frames_max_bbox(frames_path, frames_format, pts_paths, pts_formats,
     print('Computing max bounding box:')
     bounds_x = []
     bounds_y = []
-    if len(os.listdir(pts_paths[0])) == 0:
+    print pts_paths
+    try:
+        if len(os.listdir(pts_paths[0])) == 0:
+            raise IndexError()
+    except IndexError:
         print('The directory of landmarks (%s) is empty, returning' % pts_paths[0])
         return
     for s in mio.import_landmark_files(pts_paths[0] + '*.pts', verbose=verbose):

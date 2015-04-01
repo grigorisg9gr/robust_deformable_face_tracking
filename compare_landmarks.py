@@ -31,17 +31,8 @@ if __name__ == '__main__':
 proportion = 0.2
 figure_size = (10, 8)
 overwrite = True
-save_original = True
+save_original = False #True
 frames_format = '.png'
-
-# prwto afora stis original eikones, deutero afora stis cropped
-render_options = {'colours':    [colour,
-                                 colour],
-                  'sizes':      [[3]*10,
-                                 [5]*10],
-                  'edgesizes':  [[1]*10,
-                                 [2]*10]}
-
 
 
 

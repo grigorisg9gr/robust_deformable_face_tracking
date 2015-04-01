@@ -25,7 +25,6 @@ if __name__ == '__main__':
         out_landmarks_fol = '1_dlib_pred/'
         out_bb_fol = '1_dlib_detect/'
 
-#path_clips = '/vol/atlas/homes/grigoris/company_videos/interesting_one_person_videos/';
 
 # definition of paths
 p_det_0 = path_clips + foldvis + out_landmarks_fol; mkdir_p(p_det_0)
@@ -166,5 +165,6 @@ def process_clip(clip_name):
 # iterates over all clips in the folder and calls sequentially the function process_clip
 list_clips = sorted(os.listdir(path_clips + frames))
 img_type = check_img_type(list_clips, path_clips + frames)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
-[process_clip(clip_name) for clip_name in list_clips]
+[process_clip(clip_name) for clip_name in list_clips
+ if not(clip_name in list_done)]
 

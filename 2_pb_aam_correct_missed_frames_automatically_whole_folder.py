@@ -145,13 +145,10 @@ def process_clip(clip_name):
     fitter =[] #reset fitter
 
 
-
-list_done=[]
-#list_done =['830386', '821238', '830844', '2Girls1Cup_crazy_reaction_1', '830183']; 
 list_clips = sorted(os.listdir(path_clips))
 img_type = check_img_type(list_clips, path_clips)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
 
 [process_clip(clip_name) for clip_name in list_clips 
-     if not((clip_name in list_done))]
+ if not(clip_name in list_done)]
 
 

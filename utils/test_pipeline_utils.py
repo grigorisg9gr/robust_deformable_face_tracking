@@ -63,6 +63,16 @@ def test_pipeline_aux():
     assert(res_im.shape[0] < test_img.shape[0])
     assert(res_im.shape[1] < test_img.shape[1])
 
+    res_im2 = crop_rescale_img(test_img.copy(), crop_reading=1, pix_thres=40)      # check pixel threshold
+    assert(res_im2.shape[0] < test_img.shape[0])
+
+    res_im3 = crop_rescale_img(test_img.copy(), crop_reading=1, pix_thres=400)     # test that the image remains the same
+    assert(res_im3.shape[1] > test_img.shape[1]-3)
+
+    with patch('sys.stdout', new=StringIO()) as fake_out:                          # check_img_type for non valid path
+        check_img_type(['greg', 'l1', 'm1'], fake_path)
+        assert('valid path' in fake_out.getvalue())
+
     # print os.listdir('.')
     # with captured_output() as (out, err):
     #     load_images(os.listdir('.'), fake_path, fake_path, '', max_images=-5) # check for negative images
@@ -70,8 +80,9 @@ def test_pipeline_aux():
     #     assert('negative' in output)
     # print output
 
-def test_pipeline_aux_load_images():
 
+
+def test_pipeline_aux_load_images():
     with patch('sys.stdout', new=StringIO()) as fake_out:
         load_images(os.listdir('.'), '.', '.', '', max_images=-5) # check for negative number of images
         assert('negative' in fake_out.getvalue())
@@ -83,9 +94,10 @@ def test_pipeline_aux_load_images():
 
     with patch('sys.stdout', new=StringIO()) as fake_out:         # check for not valid path
         if not os.path.isdir(fake_path):
-            load_images(os.listdir('.'), fake_path, fake_path, '', max_images=5)
+            ret = load_images(os.listdir('.'), fake_path, fake_path, '', max_images=5)
             print fake_out
             assert('not a valid path' in fake_out.getvalue())
+            assert(ret == [])
 
 
 

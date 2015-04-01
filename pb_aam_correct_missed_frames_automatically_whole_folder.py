@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
 
 
-from utils import (mkdir_p, check_if_path)
+from utils import (mkdir_p, print_fancy)
 from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
 
@@ -35,6 +35,7 @@ crop_reading = 0.2 # 0.5
 pix_thres = 250
 diagonal_aam = 130
 
+print_fancy('Building GN-DPMs for the clips')
 path_clips   = path_0 + frames 
 path_init_sh = path_0 + in_landmarks_fol
 path_new_fit_vid = path_0 + foldvis + out_landmarks_fol; mkdir_p(path_new_fit_vid) #grigoris, check an ayta ta mkdir xreiazontai, afoy thewrhtika dhmioyrgei olo to path
@@ -137,12 +138,10 @@ def process_clip(clip_name):
 
 
 
-list_done=[]
-#list_done =['830386', '821238', '830844', '2Girls1Cup_crazy_reaction_1', '830183']; 
 list_clips = sorted(os.listdir(path_clips))
 img_type = check_img_type(list_clips, path_clips)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
 
-[process_clip(clip_name) for clip_name in list_clips 
-     if not((clip_name in list_done))]
+[process_clip(clip_name) for clip_name in list_clips
+ if not(clip_name in list_done)]
 
 

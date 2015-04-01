@@ -25,18 +25,8 @@ if __name__ == '__main__':
 proportion = 0.2
 figure_size = (10, 8)
 overwrite = True
-save_original = True
+save_original = False #True
 frames_format = '.png'
-
-
-# prwto afora stis original eikones, deutero afora stis cropped
-render_options = {'colours': [['r', 'b'],
-                              ['r', 'b']],
-                  'sizes': [[3, 3],
-                            [5, 5]],
-                  'edgesizes': [[1, 1],
-                                [2, 2]]}
-
 
 
 def for_each_landmark_folder(fold_landm):
