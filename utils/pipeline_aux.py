@@ -63,7 +63,7 @@ def check_path_and_landmarks(frames_path, clip_name, landmark_path):
     return check_if_path(frames_path, msg1) and check_if_path(landmark_path, msg2)
 
 
-def read_public_images(path_to_db, max_images=100, training_images=[], crop_reading=0.3, pix_thres=330, feat=None):
+def read_public_images(path_to_db, max_images=100, training_images=None, crop_reading=0.3, pix_thres=330, feat=None):
     """
     Read images from public databases. The landmarks are expected to be in the same folder.
     :param path_to_db:          Path to the folder of images. The landmark files are expected to be in the same folder.
@@ -79,6 +79,8 @@ def read_public_images(path_to_db, max_images=100, training_images=[], crop_read
         raise RuntimeError('The path to the public DB images does not exist. Try with a valid path')
     if feat is None:
         feat = no_op
+    if training_images is None:
+        training_images = []
     for i in mio.import_images(path_to_db + '*', verbose=True, max_images=max_images):
         if not i.has_landmarks:
             continue
@@ -87,7 +89,7 @@ def read_public_images(path_to_db, max_images=100, training_images=[], crop_read
     return training_images
 
 
-def load_images(list_frames, frames_path, path_land, clip_name, max_images=None, training_images=[], crop_reading=0.3, pix_thres=330, feat=None):
+def load_images(list_frames, frames_path, path_land, clip_name, max_images=None, training_images=None, crop_reading=0.3, pix_thres=330, feat=None):
     """
     Read images from the clips that are processed. The landmarks can be a different folder with the extension of pts and
     are searched as such.
@@ -107,6 +109,8 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
         return []
     if feat is None:
         feat = no_op
+    if training_images is None:
+        training_images = []
     #shuffle(list_frames)            # shuffle the list to ensure random ones are chosen
     if max_images is None:
         max_images = len(list_frames)
