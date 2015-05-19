@@ -46,7 +46,6 @@ dlib_init_detector = load_dlib_frontal_face_detector()
 predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 from random import randint

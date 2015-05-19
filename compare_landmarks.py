@@ -69,8 +69,12 @@ if len(list_landm_f) == 0:
 name_fold = ''.join(map(lambda x: '%s_' % _pattern.sub('', x), list_landm_f))  # the name of the folder that the landmarks will be saved in
 name_fold = name_fold[:-1] # stripping the last _
 pts_format = pts_format * len(list_landm_f) # replicate list elements as many times as the different landmark groups
-# print name_fold, list_landm_f, save_path_1 + name_fold
+# pts_format[-1] = '.pts' ############################################################################################# temp for iccv
 save_path_2 = save_path_1 + name_fold + '/'; mkdir_p(save_path_2)
+
+# render_options = {'colours': ['r', 'k', 'b', 'c', 'g', 'm', 'y'],
+#                  'sizes': [1] * 7,
+#                  'edgesizes': [1] * 7}
 
 for clip in list_clips:
     path_frames = path_f + clip + '/'
@@ -81,6 +85,7 @@ for clip in list_clips:
         path_landm.append(path_clips + landm + '/' + clip + '/')
     print(clip)
     save_path_i = save_path_2 + clip + '/'; mkdir_p(save_path_i)
+
     imgs = generate_frames_max_bbox(path_frames, frames_format, path_landm,
                                     pts_format, list_landm_f,
                                     save_path_i, proportion, figure_size, overwrite, save_original, render_options)

@@ -42,7 +42,7 @@ echo $PATH1
 }
 
 
-call_framework & # way to fork a new process that can run independently afterwardsi
+call_framework  # way to fork a new process that can run independently afterwardsi
 echo $PATH1
 /bin/sleep 2
 echo 'well going now, the child process must have run'
