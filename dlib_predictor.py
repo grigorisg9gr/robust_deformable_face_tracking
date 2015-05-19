@@ -1,8 +1,8 @@
 
 import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
 mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
-import os, sys
-import menpo
+import os
+import sys
 import menpo.io as mio
 from utils import (mkdir_p, check_if_path)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     else:
         raise RuntimeError('file not called with initial path')
 
-    if args > 2 and args < 5:
+    if 2 < args < 5:
         out_landmarks_fol = str(sys.argv[3]) + '/'
         out_bb_fol = str(sys.argv[2]) + '/'
         print out_landmarks_fol, '   ', out_bb_fol
@@ -27,10 +27,8 @@ if __name__ == '__main__':
 
 
 # definition of paths
-p_det_0 = path_clips + foldvis + out_landmarks_fol; mkdir_p(p_det_0)
-p_det_1 = path_clips + out_landmarks_fol; mkdir_p(p_det_1)
-
-p_det_bb_0 = path_clips + out_bb_fol; mkdir_p(p_det_bb_0) #### save bbox of detection
+p_det_1 = path_clips + out_landmarks_fol
+p_det_bb_0 = path_clips + out_bb_fol       #### save bbox of detection
 
 
 # load dlib detector and point predictor
@@ -38,6 +36,8 @@ import dlib
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpodetect import load_dlib_frontal_face_detector
 from menpo.shape import PointCloud
+import numpy as np
+from joblib import Parallel, delayed
 
 def detection_to_pointgraph(detection):
     return PointCloud(np.array([(p.y, p.x) for p in detection.parts()]))
@@ -46,12 +46,7 @@ dlib_init_detector = load_dlib_frontal_face_detector()
 predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 
-import numpy as np
-from menpo.shape import PointCloud
-from joblib import Parallel, delayed
-
-        
-def detect_in_frame(frame_name, frames_path, p_det_landm, p_det_vis, p_det_bb):
+def detect_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
     if frame_name[-4:] != img_type:
         return # in case they are something different than an image
     im = mio.import_image(frames_path + frame_name, normalise=True)
@@ -86,15 +81,11 @@ def process_clip(clip_name):
     if not check_if_path(frames_path, 'Skipped clip ' + clip_name + ' because its path of frames is not valid'):
         return
     print(clip_name)
-    if visual == 1:
-        p_det_vis = p_det_0 + clip_name + '/'; mkdir_p(p_det_vis)
-    else:
-        p_det_vis = ''
     p_det_landm = p_det_1 + clip_name + '/'; mkdir_p(p_det_landm)
     p_det_bb = p_det_bb_0 + clip_name + '/'; mkdir_p(p_det_bb) #### save bbox of detection
 
     Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)
-                    (frame_name, frames_path, p_det_landm, p_det_vis, p_det_bb) for frame_name in list_frames);
+                    (frame_name, frames_path, p_det_landm, p_det_bb) for frame_name in list_frames);
 
 
 

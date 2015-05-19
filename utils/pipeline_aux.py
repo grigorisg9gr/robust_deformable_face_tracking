@@ -111,7 +111,7 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
         feat = no_op
     if training_images is None:
         training_images = []
-    #shuffle(list_frames)            # shuffle the list to ensure random ones are chosen
+    shuffle(list_frames)            # shuffle the list to ensure random ones are chosen
     if max_images is None:
         max_images = len(list_frames)
     elif max_images < 0:
@@ -140,4 +140,3 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
         if cnt >= max_images:
             break # the limit of images (appended to the list) is reached
     return training_images
-

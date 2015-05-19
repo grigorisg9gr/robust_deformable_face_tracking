@@ -1,8 +1,8 @@
 
 import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
 mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
-import os, sys
-import menpo
+import os
+import sys
 import menpo.io as mio
 from utils import (mkdir_p, check_if_path)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
@@ -25,7 +25,10 @@ if __name__ == '__main__':
         in_bb_fol = '2_dpm/'
         out_landmarks_fol = '3_dlib_pred/'
 
-#path_clips = '/vol/atlas/homes/grigoris/company_videos/interesting_one_person_videos/';
+
+# definition of paths
+p_det_1 = path_clips + out_landmarks_fol
+p_det_bb_0 = path_clips + in_bb_fol # existing bbox of detection
 
 
 # load dlib point predictor
@@ -33,6 +36,8 @@ import dlib
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpo.shape import PointCloud
 import numpy as np
+from joblib import Parallel, delayed
+import glob
 
 def detection_to_pointgraph(detection):
     return PointCloud(np.array([(p.y, p.x) for p in detection.parts()]))
@@ -40,21 +45,7 @@ def detection_to_pointgraph(detection):
 predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 
-# definition of paths
-if visual == 1:
-    p_det_0_0 = path_clips + foldvis; mkdir_p(p_det_0_0)
-    p_det_0 = p_det_0_0 + out_landmarks_fol; mkdir_p(p_det_0)
-p_det_1 = path_clips + out_landmarks_fol; mkdir_p(p_det_1)
-p_det_bb_0 = path_clips + in_bb_fol # existing bbox of detection
-
-
-import numpy as np
-from menpo.shape import PointCloud
-from joblib import Parallel, delayed
-import glob
-
-    
-def predict_in_frame(frame_name, frames_path, p_det_landm, p_det_vis, p_det_bb):
+def predict_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
     if frame_name[-4::] != img_type:
         return # in case they are something different than an image
     im = mio.import_image(frames_path + frame_name, normalise=True)
@@ -66,7 +57,7 @@ def predict_in_frame(frame_name, frames_path, p_det_landm, p_det_vis, p_det_bb):
 #         if len(res)>9: num1 = 2; 
 #         s1 = '%0' + str(num1)
         im_pili = im.as_PILImage()
-        for kk in range(0,len(res)):
+        for kk in range(0, len(res)):
             # load bbox 
             ln = mio.import_landmark_file(res[kk])
             im.landmarks['dlib_' + str(kk)] = ln
@@ -91,15 +82,12 @@ def process_clip(clip_name):
         print('Skipped clip ' + clip_name + ' because it does not have previous landmarks (from dpm)')
         return
     print(clip_name)
-    if visual == 1:
-        p_det_vis = p_det_0 + clip_name + '/'; mkdir_p(p_det_vis)
-    else:
-        p_det_vis = ''
+
     p_det_landm = p_det_1 + clip_name + '/'; mkdir_p(p_det_landm)
     frames_path = path_clips + frames + clip_name + '/'
-    list_frames = sorted(os.listdir(frames_path));
+    list_frames = sorted(os.listdir(frames_path))
     Parallel(n_jobs=-1, verbose=4)(delayed(predict_in_frame)
-                    (frame_name, frames_path, p_det_landm, p_det_vis, p_det_bb) for frame_name in list_frames);
+                    (frame_name, frames_path, p_det_landm, p_det_bb) for frame_name in list_frames);
 
 #     [predict_in_frame(frame_name, frames_path, p_det_landm, p_det_vis, p_det_bb) for frame_name in list_frames]
 
