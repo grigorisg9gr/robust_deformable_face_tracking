@@ -48,49 +48,20 @@ p_det_1 = path_clips + out_landmarks_fol; mkdir_p(p_det_1)
 p_det_bb_0 = path_clips + in_bb_fol # existing bbox of detection
 
 
-import matplotlib.pyplot as plt
 import numpy as np
-from random import randint
 from menpo.shape import PointCloud
 from joblib import Parallel, delayed
 import glob
 
-
-def return_only_biggest_bbox(im, group_out='object_biggest', delete_rest=True):
-    # accepts an image with several label_groups in the form of a bounding box and returns the one with the biggest area. 
-    max_area = 0; label_keep = []
-    for label1 in im.landmarks.group_labels:
-        area1 = bbox_area(im.landmarks[label1][None].points)
-        if area1 > max_area: 
-            max_area = area1
-            label_keep = label1
-    print label_keep
-    if delete_rest:
-        pts_keep = im.landmarks[label_keep][None].points
-        for label1 in im.landmarks.group_labels:
-            del im.landmarks[label1]
-    im.landmarks[group_out] = PointCloud(pts_keep).bounding_box()
-      
-
-def bbox_area(bbox): 
-    # bbox in the form of menpo landmarks, with points starting from left top corner and going anti-clockwise. 
-    return (bbox[1][0] - bbox[0][0])*(bbox[2][1] - bbox[0][1])
-
     
 def predict_in_frame(frame_name, frames_path, p_det_landm, p_det_vis, p_det_bb):
-    if frame_name[-4::]!=img_type:
+    if frame_name[-4::] != img_type:
         return # in case they are something different than an image
-    if visual==1: rand = randint(1,10000);  plt.figure(rand)
     im = mio.import_image(frames_path + frame_name, normalise=True)
     if im.n_channels == 3: im = im.as_greyscale(mode='luminosity')
 #     res_dlib = dlib_init_detector(im, group_prefix='dlib'); num_res = len(res_dlib)
     res = glob.glob(p_det_bb + frame_name[:-4] + '*.pts')
-    if len(res) ==0 and (visual == 1):
-        viewer = im.view()
-        # viewer.figure.savefig(p_det_vis + frame_name[:-4] + img_type)
-        viewer.figure.savefig(p_det_vis + frame_name[:-4] + img_type)
-        plt.close(rand)
-    elif len(res)>0:
+    if len(res)>0:
 #         num1 = 1;                # num1 and s1: Values if there are more than 10 detections in the image
 #         if len(res)>9: num1 = 2; 
 #         s1 = '%0' + str(num1)
@@ -105,25 +76,12 @@ def predict_in_frame(frame_name, frames_path, p_det_landm, p_det_vis, p_det_bb):
                 det_frame = predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks['dlib_' + str(kk)].lms)) 
             except:
                 print 'Missed: ' + frames_path + frame_name
-                if visual==1:
-                    viewer = im.view();
-                    viewer.figure.savefig(p_det_vis + frame_name[:-4] + img_type)
-                    plt.close(rand)
                 return
             init_pc = detection_to_pointgraph(det_frame)
             group_kk = 'bb_' + str(kk)
             im.landmarks[group_kk] = init_pc
             # export and print result
             mio.export_landmark_file(im.landmarks[group_kk], p_det_landm + frame_name[:-4] + pts_end, overwrite=True)
-            if visual==1:
-                _c1 = colour[kk%col_len]
-                if len(res)==1: im.crop_to_landmarks_proportion_inplace(0.3)   ## zoom-in to see finer details for fitting, remove if unnecessary
-                viewer = im.view_landmarks(group=group_kk, render_numbering=False,  marker_face_colour=_c1, marker_edge_colour=_c1)
-                # viewer = im.view_landmarks(group=group_kk, render_numbering=False, lmark_view_kwargs={'colours': colour[kk%col_len]})
-        if visual==1:
-            viewer.save_figure(p_det_vis + frame_name[:-4] + img_type, pad_inches=0., overwrite=True, format=img_type[1::])
-            # viewer.figure.savefig(p_det_vis + frame_name[:-4] + img_type)
-            plt.close(rand) # plt.close('all') #problem with parallel # http://stackoverflow.com/a/21884375/1716869
   
 
 
@@ -134,7 +92,7 @@ def process_clip(clip_name):
         return
     print(clip_name)
     if visual == 1:
-        p_det_vis = p_det_0 + clip_name + '/' ; mkdir_p(p_det_vis)
+        p_det_vis = p_det_0 + clip_name + '/'; mkdir_p(p_det_vis)
     else:
         p_det_vis = ''
     p_det_landm = p_det_1 + clip_name + '/'; mkdir_p(p_det_landm)
