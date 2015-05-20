@@ -31,7 +31,7 @@ diagonal_aam = 130
 print_fancy('Building GN-DPMs for the clips')
 path_clips   = path_0 + frames 
 path_init_sh = path_0 + in_landmarks_fol
-path_fitted_aam = path_0 + out_landmarks_fol; mkdir_p(path_fitted_aam)
+path_fitted_aam = path_0 + out_landmarks_fol
 
 # read the images from the public databases (ibug, helen)
 training_images = read_public_images(path_to_ibug, max_images=130, training_images=[], crop_reading=crop_reading, pix_thres=pix_thres) # 130
@@ -76,7 +76,6 @@ def process_clip(clip_name):
     list_frames = sorted(os.listdir(frames_path))
     if not check_path_and_landmarks(frames_path, clip_name, path_init_sh + clip_name): # check that paths, landmarks exist
         return
-
     pts_folder = path_fitted_aam + clip_name + '/'; mkdir_p(pts_folder)
     
     # loading images from the clip
@@ -86,15 +85,13 @@ def process_clip(clip_name):
     
     print('\nBuilding Part based AAM for the clip ' + clip_name)
     aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=diagonal_aam,
-                            normalize_parts=normalize_parts, scales=scales).build(training_detector, verbose=True)
-    n_channels = aam.appearance_models[0].mean().n_channels
+                          normalize_parts=normalize_parts, scales=scales).build(training_detector, verbose=True)
     del training_detector
     
     fitter = PartsAAMFitter(aam, algorithm_cls=algorithm_cls, n_shape=n_shape,
                             n_appearance=n_appearance, sampling_mask=sampling_mask)
     del aam
 
-#     [process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path) for frame_name in list_frames];
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, clip_name, 
                                                           pts_folder, frames_path) for frame_name in list_frames)
     fitter =[] #reset fitter
