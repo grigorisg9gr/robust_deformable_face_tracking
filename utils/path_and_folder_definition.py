@@ -54,3 +54,9 @@ render_options = {'colours':    [colour,
                                  [2]*10]}
 
 
+# common imports for all files
+import os
+import sys
+import numpy as np
+
+
