@@ -2,17 +2,15 @@
 import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
 mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
 import menpo.io as mio
-import os, sys
-
+from utils import (mkdir_p, print_fancy)
+from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images,
+                                check_initial_path)
+from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
+from joblib import Parallel, delayed
 
 if __name__ == '__main__':
     args = len(sys.argv)
-    if args > 1:
-        path_0 = str(sys.argv[1])
-        if not(os.path.isdir(path_0)):
-            raise RuntimeError('The path %s does not exist as base folder' % path_0)
-    else:
-        raise RuntimeError('file not called with initial path')
+    path_0 = check_initial_path(args, sys.argv)
 
     if args > 3:
         in_landmarks_fol = str(sys.argv[2]) + '/'
@@ -23,14 +21,9 @@ if __name__ == '__main__':
         out_landmarks_fol = '4_fit_pbaam/'
 
 
-
-from utils import (mkdir_p, print_fancy)
-from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images)
-from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
-
 from menpo.feature import no_op, fast_dsift
 features = fast_dsift
-patch_shape = (18,18) #(14,14)
+patch_shape = (18, 18) #(14,14)
 crop_reading = 0.2 # 0.5
 pix_thres = 250
 diagonal_aam = 130
@@ -38,7 +31,6 @@ diagonal_aam = 130
 print_fancy('Building GN-DPMs for the clips')
 path_clips   = path_0 + frames 
 path_init_sh = path_0 + in_landmarks_fol
-path_new_fit_vid = path_0 + foldvis + out_landmarks_fol; mkdir_p(path_new_fit_vid) #grigoris, check an ayta ta mkdir xreiazontai, afoy thewrhtika dhmioyrgei olo to path
 path_fitted_aam = path_0 + out_landmarks_fol; mkdir_p(path_fitted_aam)
 
 # read the images from the public databases (ibug, helen)
@@ -48,29 +40,15 @@ training_images = read_public_images(path_to_helen, max_images=320, training_ima
 fitter = []
 
 
-import matplotlib.pyplot as plt
-import numpy as np
-from random import randint
-from joblib import Parallel, delayed
-
-
-
 def process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path): #, frames_path, path_all_clip, pts_folder, clip_name, fitter
     global fitter
     if frame_name[-4::]!=img_type: return # in case they are something different than an image
-    if visual == 1: rand = randint(1,10000);  plt.figure(rand)
     # load image and a file of landmark points
-#     print frame_name
     name = frame_name[:-4]; img_path = frames_path + name + img_type
     im = mio.import_image(img_path, normalise=True)
     try:
         ln = mio.import_landmark_file(path_init_sh + clip_name + '/' + name + '_0.pts')
     except:
-        if visual == 1:
-            viewer = im.view()
-            viewer.save_figure(path_all_clip + name + img_type_out, pad_inches=0., overwrite=True, format=img_type_out[1::])
-            # viewer.figure.savefig(path_all_clip + name + img_type_out)
-            plt.close(rand)
         return
     im.landmarks['PTS2'] = ln # initial detector
     if im.n_channels == 3: im = im.as_greyscale(mode='luminosity')
@@ -78,16 +56,6 @@ def process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path)
     res_im = fr.fitted_image
 
     mio.export_landmark_file(res_im.landmarks['final'], pts_folder + frame_name[:-4] + '_0.pts', overwrite=True)
-    # plt.figure(rand) # ONLY need to create fig in every iteration, IF frames of the same video are plotted in parallel
-    if visual == 1:
-        res_im.crop_to_landmarks_proportion_inplace(0.3, group='final') # works, verified
-        # viewer = res_im.view_landmarks(group='initial', render_numbering=False, lmark_view_kwargs={'colours': red}) #, avoid "new_figure=True" -> assigns new id
-        # viewer = res_im.view_landmarks(group='final', render_numbering=False, lmark_view_kwargs={'colours': blue}) #, avoid "new_figure=True" -> assigns new id
-        # viewer.figure.savefig(path_all_clip + name + img_type_out)
-        viewer = res_im.view_landmarks(group='initial', render_numbering=False,  marker_face_colour=colour[0], marker_edge_colour=colour[0])
-        viewer = res_im.view_landmarks(group='final', render_numbering=False,  marker_face_colour=colour[1], marker_edge_colour=colour[1])
-        viewer.save_figure(path_all_clip + name + img_type_out, pad_inches=0., overwrite=True, format=img_type_out[1::])
-        plt.close(rand) # plt.close('all') #problem with parallel # http://stackoverflow.com/a/21884375/1716869
 
 
 from alabortijcv2015.aam import PartsAAMBuilder
@@ -113,8 +81,6 @@ def process_clip(clip_name):
         return
 
     pts_folder = path_fitted_aam + clip_name + '/'; mkdir_p(pts_folder)
-    path_all_clip = path_new_fit_vid + clip_name + '/'; mkdir_p(path_all_clip)
-
     
     # loading images from the clip
     training_detector = load_images(list_frames, frames_path, path_init_sh, clip_name,
@@ -133,7 +99,7 @@ def process_clip(clip_name):
 
 #     [process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path) for frame_name in list_frames];
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, clip_name, 
-                                                          pts_folder, path_all_clip, frames_path) for frame_name in list_frames)
+                                                          pts_folder, frames_path) for frame_name in list_frames)
     fitter =[] #reset fitter
 
 

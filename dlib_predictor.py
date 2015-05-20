@@ -1,7 +1,6 @@
 
-import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
-mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
-
+# import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
+# mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
 import menpo.io as mio
 from utils import (mkdir_p, check_if_path)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
@@ -37,7 +36,6 @@ dlib_init_detector = load_dlib_frontal_face_detector()
 predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 
-
 def detect_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
     im = im_read_greyscale(frame_name, frames_path, img_type)
     if im is []:
@@ -51,15 +49,16 @@ def detect_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
         if num_res>9: num1 = 2
         s1 = '%0' + str(num1)
         im_pili = im.as_PILImage()
-        for kk in range(0,num_res):
+        for kk in range(0, num_res):
+            group_bb = 'dlib_' + (s1 + 'd') % kk
             pts_end = '_' + str(kk) + pts_type_out # define the ending of each pts that will be exported
-            mio.export_landmark_file(im.landmarks['dlib_' + (s1 + 'd')%kk], p_det_bb + frame_name[:-4] + pts_end, overwrite=True)
+            mio.export_landmark_file(im.landmarks[group_bb], p_det_bb + im.path.stem + pts_end, overwrite=True)
             # from bounding box to points (dlib predictor)
-            det_frame = predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks['dlib_' + (s1 + 'd')%kk].lms))
+            det_frame = predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks[group_bb].lms))
             init_pc = detection_to_pointgraph(det_frame)
-            group_kk = 'bb_' + str(kk)
-            im.landmarks[group_kk] = init_pc
-            mio.export_landmark_file(im.landmarks[group_kk], p_det_landm + frame_name[:-4] + pts_end, overwrite=True)
+            group_ln = 'bb_' + str(kk)
+            im.landmarks[group_ln] = init_pc
+            mio.export_landmark_file(im.landmarks[group_ln], p_det_landm + im.path.stem + pts_end, overwrite=True)
 
 
 
