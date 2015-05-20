@@ -141,7 +141,6 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
     # load image and the landmark points
     im = im_read_greyscale(frame_name, frames_path, img_type)
     if im is []:
-        print frame_name, frames_path
         return
     res = glob.glob(path_read_sh + clip_name + '/' + frame_name[:-4] + '*.pts')
     if len(res) > 0:

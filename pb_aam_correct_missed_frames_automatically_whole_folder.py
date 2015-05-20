@@ -4,7 +4,7 @@ mpl.use('Agg')                     # in the beginning of the program. http://sta
 import menpo.io as mio
 from utils import (mkdir_p, print_fancy)
 from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images,
-                                check_initial_path)
+                                check_initial_path, im_read_greyscale)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
 from joblib import Parallel, delayed
 
@@ -40,21 +40,18 @@ training_images = read_public_images(path_to_helen, max_images=320, training_ima
 fitter = []
 
 
-def process_frame(frame_name, clip_name, pts_folder, path_all_clip, frames_path): #, frames_path, path_all_clip, pts_folder, clip_name, fitter
+def process_frame(frame_name, clip_name, pts_folder, frames_path):
     global fitter
-    if frame_name[-4::]!=img_type: return # in case they are something different than an image
-    # load image and a file of landmark points
-    name = frame_name[:-4]; img_path = frames_path + name + img_type
-    im = mio.import_image(img_path, normalise=True)
     try:
-        ln = mio.import_landmark_file(path_init_sh + clip_name + '/' + name + '_0.pts')
+        ln = mio.import_landmark_file(path_init_sh + clip_name + '/' + frame_name[:frame_name.rfind('.')] + '_0.pts')
     except:
         return
-    im.landmarks['PTS2'] = ln # initial detector
-    if im.n_channels == 3: im = im.as_greyscale(mode='luminosity')
+    im = im_read_greyscale(frame_name, frames_path, img_type)
+    if im is []:
+        return
+    im.landmarks['PTS2'] = ln
     fr = fitter.fit(im, im.landmarks['PTS2'].lms, gt_shape=None, crop_image=0.3)
     res_im = fr.fitted_image
-
     mio.export_landmark_file(res_im.landmarks['final'], pts_folder + frame_name[:-4] + '_0.pts', overwrite=True)
 
 
