@@ -26,7 +26,7 @@ fi
 function call_framework(){
 echo 'subprocess called'
 echo $PATH1
-#  $PYTHON_P dlib_predictor.py $PATH1 $S1_DL_BB $S1_DL
+  python dlib_predictor.py $PATH1 $S1_DL_BB $S1_DL
 #  ## matlab -nodisplay -r 'cd /vol/atlas/homes/grigoris/external/dpm_matlab/voc-dpm/;startup; train_dpm_for_all_clips_in_folder();exit()'  #old version
 #  matlab -nodisplay -r 'cd /vol/atlas/homes/grigoris/external/dpm_matlab/voc-dpm/;run_with_override('\'$PATH1\'');exit()'
   #python dlib_predictor-predict_from_bb.py $PATH1  
