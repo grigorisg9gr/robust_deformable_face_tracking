@@ -1,23 +1,20 @@
 
-import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
-mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
-import os
-import sys
+# import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
+# mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
 import menpo.io as mio
 from utils import (mkdir_p, check_if_path)
-from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
-from utils.pipeline_aux import check_img_type
+from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
+from utils.pipeline_aux import (check_img_type, im_read_greyscale, check_initial_path)
+import dlib
+from menpodetect.dlib.conversion import pointgraph_to_rect
+from menpo.shape import PointCloud
+from joblib import Parallel, delayed
 
 if __name__ == '__main__':
     args = len(sys.argv)
-    if args>1:
-        path_clips = str(sys.argv[1])
-        if not(os.path.isdir(path_clips)):
-            raise RuntimeError('The path %s does not exist as base folder' % path_clips)
-    else:
-        raise RuntimeError('file not called with initial path')
+    path_clips = check_initial_path(args, sys.argv)
 
-    if args > 2 and args < 5:
+    if 2 < args < 5:
         in_bb_fol = str(sys.argv[2]) + '/'
         out_landmarks_fol = str(sys.argv[3]) + '/'
         print out_landmarks_fol, '   ', in_bb_fol
@@ -31,14 +28,6 @@ p_det_1 = path_clips + out_landmarks_fol
 p_det_bb_0 = path_clips + in_bb_fol # existing bbox of detection
 
 
-# load dlib point predictor
-import dlib
-from menpodetect.dlib.conversion import pointgraph_to_rect
-from menpo.shape import PointCloud
-import numpy as np
-from joblib import Parallel, delayed
-import glob
-
 def detection_to_pointgraph(detection):
     return PointCloud(np.array([(p.y, p.x) for p in detection.parts()]))
 
@@ -46,12 +35,11 @@ predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 
 def predict_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
-    if frame_name[-4::] != img_type:
-        return # in case they are something different than an image
-    im = mio.import_image(frames_path + frame_name, normalise=True)
-    if im.n_channels == 3: im = im.as_greyscale(mode='luminosity')
-#     res_dlib = dlib_init_detector(im, group_prefix='dlib'); num_res = len(res_dlib)
-    res = glob.glob(p_det_bb + frame_name[:-4] + '*.pts')
+    im = im_read_greyscale(frame_name, frames_path, img_type)
+    if im is []:
+        print frame_name, frames_path
+        return
+    res = glob.glob(p_det_bb + im.path.stem + '*.pts')
     if len(res)>0:
 #         num1 = 1;                # num1 and s1: Values if there are more than 10 detections in the image
 #         if len(res)>9: num1 = 2; 
@@ -71,8 +59,7 @@ def predict_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
             init_pc = detection_to_pointgraph(det_frame)
             group_kk = 'bb_' + str(kk)
             im.landmarks[group_kk] = init_pc
-            # export and print result
-            mio.export_landmark_file(im.landmarks[group_kk], p_det_landm + frame_name[:-4] + pts_end, overwrite=True)
+            mio.export_landmark_file(im.landmarks[group_kk], p_det_landm + im.path.stem + pts_end, overwrite=True)
   
 
 

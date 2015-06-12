@@ -5,7 +5,7 @@ img_type_out = '.png'
 
 
 from utils import (mkdir_p, check_if_path)
-from utils.pipeline_aux import check_path_and_landmarks
+from utils.pipeline_aux import (check_path_and_landmarks, check_initial_path)
 from utils.visualisation_aux import generate_frames_max_bbox
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
 import os, sys
@@ -13,12 +13,7 @@ import re
 
 if __name__ == '__main__':
     args = len(sys.argv)
-    if args > 1:
-        path_clips = str(sys.argv[1])
-        if not(os.path.isdir(path_clips)):
-            raise RuntimeError('The path %s does not exist as base folder' % path_clips)
-    else:
-        raise RuntimeError('file not called with initial path')
+    path_clips = check_initial_path(args, sys.argv)
 
     list_landm = []
     if args > 2: # all translated as paths of landmarks to be saved

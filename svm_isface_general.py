@@ -1,26 +1,19 @@
+# import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
+# mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
 
-
-import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
-mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
-
-
-import sys, os
 import menpo.io as mio
 from utils import (mkdir_p, print_fancy)
-from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks)
+from utils.pipeline_aux import (read_public_images, check_img_type, im_read_greyscale,
+                                check_path_and_landmarks, check_initial_path)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
 import shutil
+from joblib import Parallel, delayed
 
 if __name__ == '__main__':
     args = len(sys.argv)
-    if args>1:
-        path_0 = str(sys.argv[1])
-        if not(os.path.isdir(path_0)):
-            raise RuntimeError('The path %s does not exist as base folder' % path_0)
-    else:
-        raise RuntimeError('file not called with initial path')
+    path_0 = check_initial_path(args, sys.argv)
 
-    if args > 2 and args < 5:
+    if 2 < args < 5:
         in_landmarks_test_fol = str(sys.argv[2]) + '/'
         out_landmarks_fol = str(sys.argv[3]) + '/'
         print in_landmarks_test_fol, '   ', out_landmarks_fol
@@ -38,7 +31,6 @@ pix_thres=170
 
 path_clips = path_0 + frames
 path_read_sh = path_0 + in_landmarks_test_fol
-path_new_fit_vid = path_0 + foldvis + out_landmarks_fol; mkdir_p(path_new_fit_vid)
 path_fitted_aam = path_0 + out_landmarks_fol; mkdir_p(path_fitted_aam)
 path_pickle_svm = path_pickles + 'general_svm/'; mkdir_p(path_pickle_svm)
 
@@ -48,13 +40,12 @@ def has_person(path):
     """ Returns true if the xml in the 'path' has a person in its annotation. Based on Pascal dataset xml files. """
     tree = ET.parse(path)
     root = tree.getroot()
-    for key in range(6,len(root)):
-        if root[key].findtext('name')=='person': 
+    for key in range(6, len(root)):
+        if root[key].findtext('name') == 'person':
             return True
     return False
 
 
-import glob
 def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JPEGImages/',
                         max_loaded_images=None, pix_thres=150):
     """
@@ -72,19 +63,22 @@ def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JP
 
     list_non_faces = sorted(os.listdir(path_faces))
     im_path = base_path + im_fold; anno_path = base_path + annot
-    if max_loaded_images==None: 
+    if max_loaded_images is None:
         max_loaded_images = len(list_non_faces)
     else: 
         max_loaded_images = min(len(list_non_faces), max_loaded_images)  # ensure that there are no more images asked than those that can be loaded
     cnt = 0; training_images = []
     for pts_f in list_non_faces:
-        if cnt >= max_loaded_images: break
+        if cnt >= max_loaded_images:
+            break
         im_n = pts_f[0:6]
-        if has_person(anno_path + im_n + '.xml')==True: continue  #check that indeed there is no person in the annotations (which is the case if extracted with open cv code)
-        res_im = glob.glob(im_path + im_n + '.*'); 
-        if len(res_im)==1: 
-            im = mio.import_image(res_im[0]); 
-        else: continue
+        if has_person(anno_path + im_n + '.xml'):
+            continue  #check that indeed there is no person in the annotations (which is the case if extracted with open cv code)
+        res_im = glob.glob(im_path + im_n + '.*')
+        if len(res_im) == 1:
+            im = mio.import_image(res_im[0])
+        else:
+            continue
         ln = mio.import_landmark_file(path_faces + pts_f)
         im.landmarks['PTS'] =ln
         cnt +=1
@@ -100,8 +94,7 @@ def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JP
 # Warping all images to a reference shape
 from menpo.transform import PiecewiseAffine
 from menpo.visualize import print_dynamic, progress_bar_str
-from menpofit.aam.builder import build_reference_frame 
-import numpy as np
+from menpofit.aam.builder import build_reference_frame
 
 def warp_all_to_reference_shape(images, meanShape):
     reference_frame = build_reference_frame(meanShape)
@@ -139,31 +132,19 @@ def list_to_nd_patches(images, patch_s=(12, 12)):
     arr = np.empty((len(images), s))
     for k,im in enumerate(images):
         _p_nd = im.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s)
-        arr[k,:] = _p_nd.flatten()
+        arr[k, :] = _p_nd.flatten()
     return arr
 
 
-
-import matplotlib.pyplot as plt
-import numpy as np
-from random import randint
-from joblib import Parallel, delayed
-import glob
-
-_c1 = colour[0]
-
-def process_frame(frame_name, frames_path, pts_folder, path_all_clip, path_all_clip_2, clip_name, refFrame): 
+def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
     global clf
     # load image and the landmark points
-    name = frame_name[:-4]; img_path = frames_path + name + img_type
-    im = mio.import_image(img_path, normalise=True)
-    if im.n_channels == 3: im = im.as_greyscale(mode='luminosity') 
-    res = glob.glob(path_read_sh + clip_name + '/' + frame_name[:-4] + '*.pts')
-    if len(res) == 0:
+    im = im_read_greyscale(frame_name, frames_path, img_type)
+    if im is []:
         return
-    else:
+    res = glob.glob(path_read_sh + clip_name + '/' + frame_name[:-4] + '*.pts')
+    if len(res) > 0:
         im_org = im  #im_org = im.copy(); im = feat(im); #keep a copy of the nimage if features in image level
-        if visual == 1: rand = randint(1, 10000);  plt.figure(rand)
         for kk in range(0, len(res)):
             ln = mio.import_landmark_file(res[kk])
             im_cp = im.copy()
@@ -174,23 +155,9 @@ def process_frame(frame_name, frames_path, pts_folder, path_all_clip, path_all_c
             _p_nd = im2.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten() #case2
             decision = clf.decision_function(_p_nd) #case2
 #             print frame_name, '\t', kk, ' ', decision
-            if decision < 0: p_s = path_all_clip_2
-            else: 
-                p_s = path_all_clip
+            if decision > 0:
                 ending = res[kk].rfind('/') # find the ending of the filepath (the name of this landmark file)
                 shutil.copy2(res[kk], pts_folder + res[kk][ending+1:])
-            if visual == 1:
-                plt.clf();
-                if im_org.landmarks.has_landmarks == True: im_org.landmarks.clear()
-                im_org.landmarks['PTS'] = ln
-                if len(res) == 1: im_org.crop_to_landmarks_proportion_inplace(0.3)   ## zoom-in to see finer details for fitting, remove if unnecessary
-                viewer = im_org.view_landmarks(group='PTS', render_numbering=False,  marker_face_colour=_c1, marker_edge_colour=_c1)
-                # viewer = im_org.view_landmarks(group='PTS', render_numbering=False, lmark_view_kwargs={'colours': red})
-                # viewer.figure.savefig(p_s + name + '_%d'%kk + img_type)
-                viewer.save_figure(p_s + name + '_%d'%kk + img_type_out, pad_inches=0., overwrite=True, format=img_type_out[1::])
-        if visual == 1: plt.close(rand) # plt.close('all') #problem with parallel # http://stackoverflow.com/a/21884375/1716869
-            
-
 
 
 def process_clip(clip_name, refFrame):
@@ -201,11 +168,9 @@ def process_clip(clip_name, refFrame):
         return
 
     pts_folder = path_fitted_aam + clip_name + '/'; mkdir_p(pts_folder)
-    path_all_clip = path_new_fit_vid + clip_name + '/'; mkdir_p(path_all_clip)
-    path_all_clip_2 = path_new_fit_vid + clip_name + '_cut/'; mkdir_p(path_all_clip_2)
     # [process_frame(frame_name) for frame_name in list_frames];
-    Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder, path_all_clip,
-                                                          path_all_clip_2, clip_name, refFrame) for frame_name in list_frames)
+    Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
+                                                          clip_name, refFrame) for frame_name in list_frames)
 
 
 def load_or_train_svm():
@@ -230,7 +195,6 @@ def load_or_train_svm():
         from menpo.transform import GeneralizedProcrustesAnalysis as GPA
         gpa = GPA([i.landmarks['PTS'].lms for i in training_pos_im_1] )
         mean_shape = gpa.mean_aligned_shape()
-
 
         print('\nWarping the images and extracting patches')
         posim_l, _, refFrame1 = warp_all_to_reference_shape(training_pos_im_1, mean_shape)

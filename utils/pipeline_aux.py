@@ -140,3 +140,40 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
         if cnt >= max_images:
             break # the limit of images (appended to the list) is reached
     return training_images
+
+
+def im_read_greyscale(frame_name, frames_path, img_type, normalise=True):
+    """
+    The function reads an image with name frame_name in frames_path and returns the greyscale menpo image.
+    :param frame_name:  Name of the frame .
+    :param frames_path: Folder of the images (assumption that it exists).
+    :param img_type:    Type/extension of the image.
+    :param normalise:   (optional) Whether the image should be normalised when imported.
+    :return:            Menpo greyscale image or [] if not found.
+    """
+    if frame_name[frame_name.rfind('.'):] != img_type:
+        return [] # in case they are something different than an image
+    try:
+        im = mio.import_image(frames_path + frame_name, normalise=normalise)
+        if im.n_channels == 3:
+            im = im.as_greyscale(mode='luminosity')
+        return im
+    except:
+        print('Potentially wrong path or wrong image.')
+        return []
+
+
+def check_initial_path(args, argv):
+    """
+    Checks whether the first argument of a function is a valid base path, otherwise raises errors.
+    :param args: Number of arguments that the script is called with.
+    :param argv: The sys.argv the function is called with.
+    :return:     The initial base path (if it is valid).
+    """
+    if args > 1:
+        path_clips = str(argv[1])
+        if not(os.path.isdir(path_clips)):
+            raise RuntimeError('The path %s does not exist as a base folder' % path_clips)
+        return path_clips
+    else:
+        raise RuntimeError('file not called with initial path')
