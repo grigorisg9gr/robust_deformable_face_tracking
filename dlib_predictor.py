@@ -1,10 +1,9 @@
 
-# import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
-# mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
 import menpo.io as mio
 from utils import (mkdir_p, check_if_path)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
 from utils.pipeline_aux import (check_img_type, im_read_greyscale, check_initial_path)
+from utils.clip import Clip
 import dlib
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpodetect import load_dlib_frontal_face_detector
@@ -27,7 +26,7 @@ if __name__ == '__main__':
 
 # definition of paths
 p_det_1 = path_clips + out_landmarks_fol
-p_det_bb_0 = path_clips + out_bb_fol       #### save bbox of detection
+p_det_bb_0 = path_clips + out_bb_fol       # save bbox of detection
 
 
 def detection_to_pointgraph(detection):
@@ -37,31 +36,31 @@ dlib_init_detector = load_dlib_frontal_face_detector()
 predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 
-def detect_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
-    im = im_read_greyscale(frame_name, frames_path, img_type)
+def detect_in_frame(frame_name, clip):
+    im = im_read_greyscale(frame_name, clip.path_frames, img_type, normalise=True)  # TODO: normalise false when the environment is fixed.
     if im is []:
-        print frame_name, frames_path
+        print frame_name, clip.path_frames
         return
     # call dlib detector
     res_dlib = dlib_init_detector(im, group_prefix='dlib')
     num_res = len(res_dlib)
-    if num_res > 0:
-        num1 = 1                # num1 and s1: Values if there are more than 10 detections in the image
-        if num_res > 9:
-            num1 = 2
-        s1 = '%0' + str(num1)
-        im_pili = im.as_PILImage()
-        for kk in range(0, num_res):
-            group_bb = 'dlib_' + (s1 + 'd') % kk
-            pts_end = '_' + str(kk) + pts_type_out # define the ending of each pts that will be exported
-            mio.export_landmark_file(im.landmarks[group_bb], p_det_bb + im.path.stem + pts_end, overwrite=True)
-            # from bounding box to points (dlib predictor)
-            det_frame = predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks[group_bb].lms))
-            init_pc = detection_to_pointgraph(det_frame)
-            mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc), p_det_landm + im.path.stem + pts_end, overwrite=True)
-            # group_ln = 'bb_' + str(kk)
-            # im.landmarks[group_ln] = init_pc
-            # mio.export_landmark_file(im.landmarks[group_ln], p_det_landm + im.path.stem + pts_end, overwrite=True)
+    if num_res == 0:
+        return
+    num1 = 1                # num1 and s1: Values if there are more than 10 detections in the image
+    if num_res > 9:
+        num1 = 2
+    s1 = '%0' + str(num1)
+    im_pili = im.as_PILImage()
+    for kk in range(num_res):
+        group_bb = 'dlib_' + (s1 + 'd') % kk
+        pts_end = im.path.stem + '_' + str(kk) + pts_type_out  # define the ending of each pts that will be exported
+        mio.export_landmark_file(im.landmarks[group_bb], clip.path_write_ln[0] + pts_end, overwrite=True)
+        # from bounding box to points (dlib predictor)
+        init_pc = detection_to_pointgraph(predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks[group_bb].lms)))
+        mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc), clip.path_write_ln[1] + pts_end, overwrite=True)
+        # group_ln = 'bb_' + str(kk)
+        # im.landmarks[group_ln] = init_pc
+        # mio.export_landmark_file(im.landmarks[group_ln], p_det_landm + im.path.stem + pts_end, overwrite=True)
 
 
 
@@ -75,12 +74,12 @@ def process_clip(clip_name):
     if not check_if_path(frames_path, 'Skipped clip ' + clip_name + ' because its path of frames is not valid'):
         return
     print(clip_name)
+    p_det_bb = p_det_bb_0 + clip_name + '/'; mkdir_p(p_det_bb)  # save bbox of detection
     p_det_landm = p_det_1 + clip_name + '/'; mkdir_p(p_det_landm)
-    p_det_bb = p_det_bb_0 + clip_name + '/'; mkdir_p(p_det_bb) #### save bbox of detection
+    clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
 
-    Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)
-                    (frame_name, frames_path, p_det_landm, p_det_bb) for frame_name in list_frames);
-
+    Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip) for frame_name in list_frames);
+    # t = [detect_in_frame(frame_name, clip) for frame_name in list_frames]
 
 
 # iterates over all clips in the folder and calls sequentially the function process_clip

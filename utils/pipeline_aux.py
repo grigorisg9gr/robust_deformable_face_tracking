@@ -8,7 +8,7 @@ import menpo.io as mio
 from menpo.feature import no_op
 import glob
 try:    ##### TODO: correct this hack with the proper way
-    from robust_detection_and_localisation.utils import (check_if_path, find_image_type)
+    from robust_detection_localisation.utils import (check_if_path, find_image_type)
 except:
     from utils import (check_if_path, find_image_type)
 
@@ -138,7 +138,7 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
         training_images.append(feat(im))
         cnt += 1
         if cnt >= max_images:
-            break # the limit of images (appended to the list) is reached
+            break  # the limit of images (appended to the list) is reached
     return training_images
 
 
@@ -156,7 +156,9 @@ def im_read_greyscale(frame_name, frames_path, img_type, normalise=True):
     try:
         im = mio.import_image(frames_path + frame_name, normalise=normalise)
         if im.n_channels == 3:
-            im = im.as_greyscale(mode='luminosity')
+            # print im.pixels.dtype
+            im = im.as_greyscale(mode='channel', channel=1)  # (mode='luminosity')
+            # print im.pixels.dtype
         return im
     except:
         print('Potentially wrong path or wrong image.')

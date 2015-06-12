@@ -22,11 +22,11 @@ if __name__ == '__main__':
         out_landmarks_fol = '5_svm_faces/'
 
 
-from menpo.feature import no_op, fast_dsift #double_igo
+from menpo.feature import no_op, fast_dsift
 feat = fast_dsift
 patch_s = (12, 12)
 crop_reading = 0.2
-pix_thres=170
+pix_thres = 170
 
 
 path_clips = path_0 + frames
@@ -125,7 +125,7 @@ def warp_image_to_reference_shape(i, reference_frame):
     return im2 #.as_vector()
 
 
-#Extract patches around the images
+# Extract patches around the images
 # CASE 2: We want only the patches around landmarks
 def list_to_nd_patches(images, patch_s=(12, 12)):
     s = images[0].extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten().shape[0]
@@ -142,22 +142,23 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
     im = im_read_greyscale(frame_name, frames_path, img_type)
     if im is []:
         return
-    res = glob.glob(path_read_sh + clip_name + '/' + frame_name[:-4] + '*.pts')
-    if len(res) > 0:
-        im_org = im  #im_org = im.copy(); im = feat(im); #keep a copy of the nimage if features in image level
-        for kk in range(0, len(res)):
-            ln = mio.import_landmark_file(res[kk])
-            im_cp = im.copy()
-            im_cp.landmarks['PTS'] = ln
-            im_cp.crop_to_landmarks_proportion_inplace(0.2);  im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
-            im2 = warp_image_to_reference_shape(im_cp, refFrame)
+    res = glob.glob(path_read_sh + clip_name + '/' + im.path.stem + '*.pts')
+    if len(res) == 0:
+        return
+    im_org = im  #im_org = im.copy(); im = feat(im); #keep a copy of the nimage if features in image level
+    for kk, ln_n in enumerate(res):
+        ln = mio.import_landmark_file(ln_n)
+        im_cp = im.copy()
+        im_cp.landmarks['PTS'] = ln
+        im_cp.crop_to_landmarks_proportion_inplace(0.2);  im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
+        im2 = warp_image_to_reference_shape(im_cp, refFrame)
 #             decision = clf.decision_function(im2.as_vector()) #case1
-            _p_nd = im2.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten() #case2
-            decision = clf.decision_function(_p_nd) #case2
+        _p_nd = im2.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten()
+        decision = clf.decision_function(_p_nd)  # case2
 #             print frame_name, '\t', kk, ' ', decision
-            if decision > 0:
-                ending = res[kk].rfind('/') # find the ending of the filepath (the name of this landmark file)
-                shutil.copy2(res[kk], pts_folder + res[kk][ending+1:])
+        if decision > 0:
+            ending = ln_n.rfind('/') # find the ending of the filepath (the name of this landmark file)
+            shutil.copy2(ln_n, pts_folder + ln_n[ending+1:])
 
 
 def process_clip(clip_name, refFrame):
