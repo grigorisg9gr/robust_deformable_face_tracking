@@ -1,12 +1,13 @@
 import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
 mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
-import menpo.io as mio
-import os, os.path
-import numpy as np
 import matplotlib.pyplot as plt
+from random import randint
+import menpo.io as mio
+import os
+import numpy as np
 import matplotlib.gridspec as gridspec
 from menpo.image import Image
-from random import randint
+
 
 def _render(im, pts_names, fig, colours, markersizes, edgesizes, figure_size):
     if im.has_landmarks:
@@ -90,7 +91,8 @@ def generate_frames_max_bbox(frames_path, frames_format, pts_paths, pts_formats,
     try:
         from joblib import Parallel, delayed
         Parallel(n_jobs=-1, verbose=4)(delayed(_aux)(im, pts_paths, pts_names, pts_formats, save_path, save_original,
-                                                    off1, off2, figure_size, overwrite, render_options) for im in mio.import_images(frames_path + '*' + frames_format, verbose=False));
+                                                     off1, off2, figure_size, overwrite, render_options)
+                                       for im in mio.import_images(frames_path + '*' + frames_format, verbose=False));
     except:
         print('Sequential execution')
         for im in mio.import_images(frames_path + '*' + frames_format, verbose=verbose):

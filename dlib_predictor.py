@@ -9,6 +9,7 @@ import dlib
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpodetect import load_dlib_frontal_face_detector
 from menpo.shape import PointCloud
+from menpo.landmark import LandmarkGroup
 from joblib import Parallel, delayed
 
 if __name__ == '__main__':
@@ -46,7 +47,8 @@ def detect_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
     num_res = len(res_dlib)
     if num_res > 0:
         num1 = 1                # num1 and s1: Values if there are more than 10 detections in the image
-        if num_res>9: num1 = 2
+        if num_res > 9:
+            num1 = 2
         s1 = '%0' + str(num1)
         im_pili = im.as_PILImage()
         for kk in range(0, num_res):
@@ -56,9 +58,10 @@ def detect_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
             # from bounding box to points (dlib predictor)
             det_frame = predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks[group_bb].lms))
             init_pc = detection_to_pointgraph(det_frame)
-            group_ln = 'bb_' + str(kk)
-            im.landmarks[group_ln] = init_pc
-            mio.export_landmark_file(im.landmarks[group_ln], p_det_landm + im.path.stem + pts_end, overwrite=True)
+            mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc), p_det_landm + im.path.stem + pts_end, overwrite=True)
+            # group_ln = 'bb_' + str(kk)
+            # im.landmarks[group_ln] = init_pc
+            # mio.export_landmark_file(im.landmarks[group_ln], p_det_landm + im.path.stem + pts_end, overwrite=True)
 
 
 

@@ -1,4 +1,5 @@
-
+import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
+mpl.use('Agg')
 from utils import (mkdir_p, check_if_path)
 from utils.pipeline_aux import (check_path_and_landmarks, check_img_type, check_initial_path)
 from utils.visualisation_aux import generate_frames_max_bbox

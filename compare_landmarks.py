@@ -1,4 +1,5 @@
-
+import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
+mpl.use('Agg')
 multiple_faces_per_image = False     # If set to false, then in each image can have at most one face (landmark group),
 # which will have the same name as the image.
 img_type_out = '.png'
@@ -62,8 +63,8 @@ if len(list_landm_f) == 0:
     exit(1)
 
 name_fold = ''.join(map(lambda x: '%s_' % _pattern.sub('', x), list_landm_f))  # the name of the folder that the landmarks will be saved in
-name_fold = name_fold[:-1] # stripping the last _
-pts_format = pts_format * len(list_landm_f) # replicate list elements as many times as the different landmark groups
+name_fold = name_fold[:-1]  # stripping the last _
+pts_format *= len(list_landm_f)  # replicate list elements as many times as the different landmark groups
 # pts_format[-1] = '.pts' ############################################################################################# temp for iccv
 save_path_2 = save_path_1 + name_fold + '/'; mkdir_p(save_path_2)
 

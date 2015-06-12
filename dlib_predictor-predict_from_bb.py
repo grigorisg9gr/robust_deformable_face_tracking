@@ -9,6 +9,7 @@ import dlib
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpo.shape import PointCloud
 from joblib import Parallel, delayed
+from menpo.landmark import LandmarkGroup
 
 if __name__ == '__main__':
     args = len(sys.argv)
@@ -51,15 +52,13 @@ def predict_in_frame(frame_name, frames_path, p_det_landm, p_det_bb):
             im.landmarks['dlib_' + str(kk)] = ln
             # apply predictor
             pts_end = '_' + str(kk) + '.pts'
-            try: 
-                det_frame = predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks['dlib_' + str(kk)].lms)) 
-            except:
-                print 'Missed: ' + frames_path + frame_name
-                return
+            det_frame = predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks['dlib_' + str(kk)].lms))
             init_pc = detection_to_pointgraph(det_frame)
-            group_kk = 'bb_' + str(kk)
-            im.landmarks[group_kk] = init_pc
-            mio.export_landmark_file(im.landmarks[group_kk], p_det_landm + im.path.stem + pts_end, overwrite=True)
+            mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc),
+                                     p_det_landm + im.path.stem + pts_end, overwrite=True)
+            # group_kk = 'bb_' + str(kk)
+            # im.landmarks[group_kk] = init_pc
+            # mio.export_landmark_file(im.landmarks[group_kk], p_det_landm + im.path.stem + pts_end, overwrite=True)
   
 
 
