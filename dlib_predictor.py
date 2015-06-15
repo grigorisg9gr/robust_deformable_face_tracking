@@ -20,8 +20,7 @@ if __name__ == '__main__':
         out_bb_fol = str(sys.argv[2]) + '/'
         print out_landmarks_fol, '   ', out_bb_fol
     else:
-        out_landmarks_fol = '1_dlib_pred/'
-        out_bb_fol = '1_dlib_detect/'
+        out_landmarks_fol, out_bb_fol = '1_dlib_pred/', '1_dlib_detect/'
 
 
 # definition of paths

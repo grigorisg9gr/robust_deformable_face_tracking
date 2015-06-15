@@ -1,6 +1,3 @@
-
-import matplotlib as mpl           # significant feature: For using the savefig in the python terminal. Should be added
-mpl.use('Agg')                     # in the beginning of the program. http://stackoverflow.com/a/4935945/1716869
 import menpo.io as mio
 from utils import (mkdir_p, print_fancy)
 from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images,
@@ -18,8 +15,7 @@ if __name__ == '__main__':
         out_landmarks_fol = str(sys.argv[3]) + '/'
         print in_landmarks_fol, '   ', out_landmarks_fol
     else:
-        in_landmarks_fol = '3_dlib_pred/'
-        out_landmarks_fol = '4_fit_pbaam/'
+        in_landmarks_fol, out_landmarks_fol = '3_dlib_pred/', '4_fit_pbaam/'
 
 
 from menpo.feature import no_op, fast_dsift

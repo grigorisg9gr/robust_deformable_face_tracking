@@ -24,9 +24,7 @@ if __name__ == '__main__':
         print in_bb_fol, '   ', out_landmarks_fol
     else:
         in_bb_fol = '1_dlib_detect/'
-        out_bb_fol = '2_ffld/'
-        out_model_fol = '2_ffld_models/'
-        out_landmarks_fol = '3_ffld_ln/'
+        out_bb_fol, out_model_fol, out_landmarks_fol = '2_ffld/', '2_ffld_models/', '3_ffld_ln/'
 
 
 p_det_0 = path_clips + out_bb_fol
