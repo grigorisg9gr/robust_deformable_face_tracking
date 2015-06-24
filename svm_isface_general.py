@@ -69,18 +69,18 @@ def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JP
             break
         im_n = pts_f[0:6]
         if has_person(anno_path + im_n + '.xml'):
-            continue  #check that indeed there is no person in the annotations (which is the case if extracted with open cv code)
+            continue  # check that indeed there is no person in the annotations (which is the case if extracted with open cv code)
         res_im = glob.glob(im_path + im_n + '.*')
         if len(res_im) == 1:
             im = mio.import_image(res_im[0])
         else:
             continue
         ln = mio.import_landmark_file(path_faces + pts_f)
-        im.landmarks['PTS'] =ln
+        im.landmarks['PTS'] = ln
         cnt +=1
         if im.n_channels == 3: im = im.as_greyscale(mode='luminosity')
         im.crop_to_landmarks_proportion_inplace(0.2)
-        if im.shape[0]>pix_thres or im.shape[1]>pix_thres:
+        if im.shape[0] > pix_thres or im.shape[1] > pix_thres:
             im = im.rescale_to_diagonal(pix_thres)
         training_images.append(feat(im))
     return training_images, cnt
@@ -97,8 +97,7 @@ def warp_all_to_reference_shape(images, meanShape):
  
     # Build transforms for warping
     transforms = [PiecewiseAffine(reference_frame.landmarks['source'][None], i.landmarks['PTS'][None])
-                          for i in images]
-#     print transforms, '\n', transforms[0].n_dims
+                  for i in images]
     # warp images to reference frame
     warped_images_list = []
     for c, (i, t) in enumerate(zip(images, transforms)):
@@ -118,11 +117,10 @@ def warp_image_to_reference_shape(i, reference_frame):
     transform = [PiecewiseAffine(reference_frame.landmarks['source'][None], i.landmarks['PTS'][None])]
     im2 = i.warp_to_mask(reference_frame.mask, transform[0])
     im2.landmarks['source'] = reference_frame.landmarks['source']
-    return im2 #.as_vector()
+    return im2
 
 
-# Extract patches around the images
-# CASE 2: We want only the patches around landmarks
+# Extract patches around each landmark of the image
 def list_to_nd_patches(images, patch_s=(12, 12)):
     s = images[0].extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten().shape[0]
     arr = np.empty((len(images), s))
@@ -139,8 +137,6 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
     if im is []:
         return
     res = glob.glob(path_read_sh + clip_name + '/' + im.path.stem + '*.pts')
-    if len(res) == 0:
-        return
     im_org = im  #im_org = im.copy(); im = feat(im); #keep a copy of the nimage if features in image level
     for kk, ln_n in enumerate(res):
         ln = mio.import_landmark_file(ln_n)
@@ -148,10 +144,8 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
         im_cp.landmarks['PTS'] = ln
         im_cp.crop_to_landmarks_proportion_inplace(0.2);  im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
         im2 = warp_image_to_reference_shape(im_cp, refFrame)
-#             decision = clf.decision_function(im2.as_vector()) #case1
         _p_nd = im2.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten()
-        decision = clf.decision_function(_p_nd)  # case2
-#             print frame_name, '\t', kk, ' ', decision
+        decision = clf.decision_function(_p_nd)
         if decision > 0:
             ending = ln_n.rfind('/')  # find the ending of the filepath (the name of this landmark file)
             shutil.copy2(ln_n, pts_folder + ln_n[ending+1:])

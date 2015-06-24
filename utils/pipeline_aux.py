@@ -7,7 +7,7 @@ import os
 import menpo.io as mio
 from menpo.feature import no_op
 import glob
-try:    ##### TODO: correct this hack with the proper way
+try:    # #### TODO: correct this hack with the proper way
     from robust_detection_localisation.utils import (check_if_path, find_image_type)
 except:
     from utils import (check_if_path, find_image_type)
@@ -117,7 +117,7 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
     elif max_images < 0:
         print('Warning: The images cannot be negative, loading the whole list instead.')
         max_images = len(list_frames)
-    cnt = 0 # counter for images appended to the list
+    cnt = 0  # counter for images appended to the list
     for i, frame_name in enumerate(list_frames):
         name = frame_name[:-4]          # name of the image without the extension
         try:

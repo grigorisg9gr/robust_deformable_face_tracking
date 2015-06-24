@@ -54,7 +54,7 @@ def predict_in_frame(frame_name, clip):
     s1 = '%0' + str(num1)
     im_pili = np.array(im.as_PILImage())
     for kk in range(0, 1):   # num_res to keep all, here keeping ONLY the most confident one
-        pts_end = im.path.stem + '_' + str(kk) + '.pts'
+        pts_end = im.path.stem + '_' + str(kk) + pts_type_out
         ln = im.landmarks['ffld2_' + (s1 + 'd') % kk]
         mio.export_landmark_file(ln, clip.path_write_ln[0] + pts_end, overwrite=True)
         # convert to landmarks

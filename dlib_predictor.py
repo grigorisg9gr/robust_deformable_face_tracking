@@ -42,8 +42,6 @@ def detect_in_frame(frame_name, clip):
         print frame_name, clip.path_frames
         return
     res_dlib = dlib_init_detector(im, group_prefix='dlib')  # call dlib detector
-    # if len(res_dlib) == 0: # not necessary, it will return
-    #     return
     im_pili = np.array(im.as_PILImage())
     for kk, g in enumerate(im.landmarks.group_labels):
         pts_end = im.path.stem + '_' + str(kk) + pts_type_out  # define the ending of each pts that will be exported

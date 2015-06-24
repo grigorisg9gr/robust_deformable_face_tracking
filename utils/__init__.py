@@ -41,9 +41,9 @@ def find_image_type(dirname, fname):
     have one of the extensions listed below, otherwise an exception is raised.
     """
     from os.path import splitext
-    extensions = {'png', 'jpg', 'gif', 'jpeg'} #can add to this list if required
+    extensions = {'png', 'jpg', 'gif', 'jpeg'}  # can add to this list if required
     try:
-        image_type = splitext(fname)[-1][1:] # Assumption that the first element is an image.
+        image_type = splitext(fname)[-1][1:]  # Assumption that the first element is an image.
     except IOError:
         print('Probably the first element in the folder is not an image, which is required')
         raise
