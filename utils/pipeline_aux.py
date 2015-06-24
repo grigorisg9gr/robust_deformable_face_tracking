@@ -152,13 +152,13 @@ def im_read_greyscale(frame_name, frames_path, img_type, normalise=True):
     :return:            Menpo greyscale image or [] if not found.
     """
     if frame_name[frame_name.rfind('.'):] != img_type:
-        return [] # in case they are something different than an image
+        return []  # in case they are something different than an image
     try:
         im = mio.import_image(frames_path + frame_name, normalise=normalise)
-        if im.n_channels == 3:
-            # print im.pixels.dtype
-            im = im.as_greyscale(mode='channel', channel=1)  # (mode='luminosity')
-            # print im.pixels.dtype
+        if im.n_channels == 3 and normalise:
+            im = im.as_greyscale(mode='luminosity')
+        elif im.n_channels == 3:
+            im = im.as_greyscale(mode='channel', channel=1)
         return im
     except:
         print('Potentially wrong path or wrong image.')
