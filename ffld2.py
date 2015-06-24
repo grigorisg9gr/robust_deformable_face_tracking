@@ -30,7 +30,7 @@ if __name__ == '__main__':
 p_det_0 = path_clips + out_bb_fol
 p_det_1 = path_clips + out_landmarks_fol
 p_det_bb_0 = path_clips + in_bb_fol  # existing bbox of detection
-p_save_model = path_clips + out_model_fol; mkdir_p(p_save_model)  # path that trained models will be saved
+p_save_model = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved
 
 
 
@@ -87,8 +87,8 @@ def process_clip(clip_name):
     ps_model.save(p_save_model + clip_name + '.model')
     detector = FFLD2Detector(ps_model)
 
-    p_det_bb = p_det_0 + clip_name + '/'; mkdir_p(p_det_bb)
-    p_det_landm = p_det_1 + clip_name + '/'; mkdir_p(p_det_landm)
+    p_det_bb = mkdir_p(p_det_0 + clip_name + '/')
+    p_det_landm = mkdir_p(p_det_1 + clip_name + '/')
     clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
 
     [predict_in_frame(frame_name, clip) for frame_name in list_frames]

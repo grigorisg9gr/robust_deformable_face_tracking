@@ -71,7 +71,7 @@ def process_clip(clip_name):
     list_frames = sorted(os.listdir(frames_path))
     if not check_path_and_landmarks(frames_path, clip_name, path_init_sh + clip_name):  # check that paths, landmarks exist
         return
-    pts_folder = path_fitted_aam + clip_name + '/'; mkdir_p(pts_folder)
+    pts_folder = mkdir_p(path_fitted_aam + clip_name + '/')
     
     # loading images from the clip
     training_detector = load_images(list_frames, frames_path, path_init_sh, clip_name,

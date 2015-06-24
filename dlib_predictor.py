@@ -64,8 +64,8 @@ def process_clip(clip_name):
     if not check_if_path(frames_path, 'Skipped clip ' + clip_name + ' because its path of frames is not valid'):
         return
     print(clip_name)
-    p_det_bb = p_det_bb_0 + clip_name + '/'; mkdir_p(p_det_bb)  # save bbox of detection
-    p_det_landm = p_det_1 + clip_name + '/'; mkdir_p(p_det_landm)
+    p_det_bb = mkdir_p(p_det_bb_0 + clip_name + '/')  # save bbox of detection
+    p_det_landm = mkdir_p(p_det_1 + clip_name + '/')
     clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
 
     Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip) for frame_name in list_frames);

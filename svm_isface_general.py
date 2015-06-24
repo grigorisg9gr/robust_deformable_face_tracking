@@ -27,8 +27,8 @@ pix_thres = 170
 
 path_clips = path_0 + frames
 path_read_sh = path_0 + in_landmarks_test_fol
-path_fitted_aam = path_0 + out_landmarks_fol; mkdir_p(path_fitted_aam)
-path_pickle_svm = path_pickles + 'general_svm/'; mkdir_p(path_pickle_svm)
+path_fitted_aam = mkdir_p(path_0 + out_landmarks_fol)
+path_pickle_svm = mkdir_p(path_pickles + 'general_svm/')
 
 
 import xml.etree.ElementTree as ET
@@ -164,7 +164,7 @@ def process_clip(clip_name, refFrame):
     if not check_path_and_landmarks(frames_path, clip_name, path_read_sh + clip_name): # check that paths, landmarks exist
         return
 
-    pts_folder = path_fitted_aam + clip_name + '/'; mkdir_p(pts_folder)
+    pts_folder = mkdir_p(path_fitted_aam + clip_name + '/')
     # [process_frame(frame_name) for frame_name in list_frames];
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
                                                           clip_name, refFrame) for frame_name in list_frames)
