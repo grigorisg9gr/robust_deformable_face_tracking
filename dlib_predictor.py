@@ -36,26 +36,20 @@ predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 
 def detect_in_frame(frame_name, clip):
+    # if normalise=True in im_read_greyscale: before calling dlib detector, image should be converted to uint8
     im = im_read_greyscale(frame_name, clip.path_frames, img_type, normalise=False)
     if im is []:
         print frame_name, clip.path_frames
         return
-    # call dlib detector
-    res_dlib = dlib_init_detector(im, group_prefix='dlib')
-    num_res = len(res_dlib)
-    if num_res == 0:
-        return
-    num1 = 1                # num1 and s1: Values if there are more than 10 detections in the image
-    if num_res > 9:
-        num1 = 2
-    s1 = '%0' + str(num1)
-    im_pili = im.as_PILImage()
-    for kk in range(num_res):
-        group_bb = 'dlib_' + (s1 + 'd') % kk
+    res_dlib = dlib_init_detector(im, group_prefix='dlib')  # call dlib detector
+    # if len(res_dlib) == 0: # not necessary, it will return
+    #     return
+    im_pili = np.array(im.as_PILImage())
+    for kk, g in enumerate(im.landmarks.group_labels):
         pts_end = im.path.stem + '_' + str(kk) + pts_type_out  # define the ending of each pts that will be exported
-        mio.export_landmark_file(im.landmarks[group_bb], clip.path_write_ln[0] + pts_end, overwrite=True)
+        mio.export_landmark_file(im.landmarks[g], clip.path_write_ln[0] + pts_end, overwrite=True)
         # from bounding box to points (dlib predictor)
-        init_pc = detection_to_pointgraph(predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks[group_bb].lms)))
+        init_pc = detection_to_pointgraph(predictor_dlib(im_pili, pointgraph_to_rect(im.landmarks[g].lms)))
         mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc), clip.path_write_ln[1] + pts_end, overwrite=True)
 
 
@@ -74,8 +68,8 @@ def process_clip(clip_name):
     p_det_landm = p_det_1 + clip_name + '/'; mkdir_p(p_det_landm)
     clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
 
-    # Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip) for frame_name in list_frames);
-    t = [detect_in_frame(frame_name, clip) for frame_name in list_frames]
+    Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip) for frame_name in list_frames);
+    # t = [detect_in_frame(frame_name, clip) for frame_name in list_frames]
 
 
 # iterates over all clips in the folder and calls sequentially the function process_clip

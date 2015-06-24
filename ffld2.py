@@ -6,9 +6,9 @@ from utils.clip import Clip
 import numpy as np
 from menpo.shape import PointCloud
 from joblib import Parallel, delayed
-import glob
 from menpodetect.ffld2 import FFLD2Detector, load_ffld2_frontal_face_detector, train_ffld2_detector
 from menpodetect.dlib.conversion import pointgraph_to_rect
+from menpo.landmark import LandmarkGroup
 import dlib
 
 
@@ -34,7 +34,7 @@ p_save_model = path_clips + out_model_fol; mkdir_p(p_save_model)  # path that tr
 
 
 
-predictor_dlib = dlib.shape_predictor('/vol/atlas/homes/grigoris/raps_menpo/shape_predictor_68_face_landmarks.dat')
+predictor_dlib = dlib.shape_predictor(path_shape_pred)
 
 def detection_to_pointgraph(detection):
     return PointCloud(np.array([(p.y, p.x) for p in detection.parts()]))
@@ -42,7 +42,7 @@ def detection_to_pointgraph(detection):
     
 def predict_in_frame(frame_name, clip):
     global detector
-    im = im_read_greyscale(frame_name, clip.path_frames, img_type, normalise=True)  # TODO: normalise false when the environment is fixed.
+    im = im_read_greyscale(frame_name, clip.path_frames, img_type, normalise=False)
 
     res_dlib = detector(im)
     num_res = len(res_dlib)
@@ -52,16 +52,15 @@ def predict_in_frame(frame_name, clip):
     if num_res > 9:
         num1 = 2
     s1 = '%0' + str(num1)
-    im_pili = im.as_PILImage()
+    im_pili = np.array(im.as_PILImage())
     for kk in range(0, 1):   # num_res to keep all, here keeping ONLY the most confident one
         pts_end = im.path.stem + '_' + str(kk) + '.pts'
-        mio.export_landmark_file(im.landmarks['ffld2_' + (s1 + 'd') % kk], clip.path_write_ln[0] + pts_end, overwrite=True)
+        ln = im.landmarks['ffld2_' + (s1 + 'd') % kk]
+        mio.export_landmark_file(ln, clip.path_write_ln[0] + pts_end, overwrite=True)
         # convert to landmarks
-        det_frame = predictor_dlib(np.array(im_pili), pointgraph_to_rect(im.landmarks['ffld2_' + (s1 + 'd')%kk].lms))
+        det_frame = predictor_dlib(im_pili, pointgraph_to_rect(ln.lms))
         init_pc = detection_to_pointgraph(det_frame)
-        group_kk = 'bb_' + str(kk)
-        im.landmarks[group_kk] = init_pc
-        mio.export_landmark_file(im.landmarks[group_kk], clip.path_write_ln[1] + pts_end, overwrite=True)
+        mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc), clip.path_write_ln[1] + pts_end, overwrite=True)
 
 
 

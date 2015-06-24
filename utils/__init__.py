@@ -9,11 +9,11 @@ def mkdir_p(path):
     It creates all the subfolders till the end folder.
     """
     try:
-        # import errno
         os.makedirs(path)
+        return path
     except OSError as exc:  # Python >2.5
         if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
+            return path
         else:
             raise
 

@@ -38,26 +38,22 @@ def predict_in_frame(frame_name, clip):
         print frame_name, clip.path_frames
         return
     res = glob.glob(clip.path_read_ln + im.path.stem + '*.pts')
-    if len(res) == 0:
-        return
-    # num1 = 1;                # num1 and s1: Values if there are more than 10 detections in the image
-    # if len(res)>9: num1 = 2;
-    # s1 = '%0' + str(num1)
-    im_pili = im.as_PILImage()
+    # if len(res) == 0:
+    #     return
+    im_pili = np.array(im.as_PILImage())
     for kk, ln1 in enumerate(res):
         # load bbox
         ln = mio.import_landmark_file(ln1)
         im.landmarks['dlib_' + str(kk)] = ln
         # apply predictor
         pts_end = '_' + str(kk) + '.pts'
-        init_pc = detection_to_pointgraph(predictor_dlib(np.array(im_pili),
+        init_pc = detection_to_pointgraph(predictor_dlib(im_pili,
                                                          pointgraph_to_rect(im.landmarks['dlib_' + str(kk)].lms)))
         mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc),
                                  clip.path_write_ln + im.path.stem + pts_end, overwrite=True)
         # group_kk = 'bb_' + str(kk)
         # im.landmarks[group_kk] = init_pc
         # mio.export_landmark_file(im.landmarks[group_kk], p_det_landm + im.path.stem + pts_end, overwrite=True)
-  
 
 
 def process_clip(clip_name):
