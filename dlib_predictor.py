@@ -38,7 +38,8 @@ predictor_dlib = dlib.shape_predictor(path_shape_pred)
 def detect_in_frame(frame_name, clip):
     # if normalise=True in im_read_greyscale: before calling dlib detector, image should be converted to uint8
     im = im_read_greyscale(frame_name, clip.path_frames, img_type, normalise=False)
-    if im is []:
+    print frame_name
+    if not im:
         print frame_name, clip.path_frames
         return
     res_dlib = dlib_init_detector(im, group_prefix='dlib')  # call dlib detector
@@ -66,8 +67,8 @@ def process_clip(clip_name):
     p_det_landm = mkdir_p(p_det_1 + clip_name + '/')
     clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
 
-    Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip) for frame_name in list_frames);
-    # t = [detect_in_frame(frame_name, clip) for frame_name in list_frames]
+    # Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip) for frame_name in list_frames);
+    t = [detect_in_frame(frame_name, clip) for frame_name in list_frames]
 
 
 # iterates over all clips in the folder and calls sequentially the function process_clip

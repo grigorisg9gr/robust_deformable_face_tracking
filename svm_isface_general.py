@@ -134,7 +134,7 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
     global clf
     # load image and the landmark points
     im = im_read_greyscale(frame_name, frames_path, img_type)
-    if im is []:
+    if not im:
         return
     res = glob.glob(path_read_sh + clip_name + '/' + im.path.stem + '*.pts')
     im_org = im  #im_org = im.copy(); im = feat(im); #keep a copy of the nimage if features in image level

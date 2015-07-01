@@ -43,7 +43,7 @@ def process_frame(frame_name, clip):
     except:
         return
     im = im_read_greyscale(frame_name, clip.path_frames, img_type)
-    if im is []:
+    if not im:
         return
     im.landmarks['PTS2'] = ln
     fr = fitter.fit(im, im.landmarks['PTS2'].lms, gt_shape=None, crop_image=0.3)
@@ -74,9 +74,8 @@ def process_clip(clip_name):
     pts_folder = mkdir_p(path_fitted_aam + clip_name + '/')
     
     # loading images from the clip
-    training_detector = load_images(list_frames, frames_path, path_init_sh, clip_name,
+    training_detector = load_images(list(list_frames), frames_path, path_init_sh, clip_name,
                                     training_images=list(training_images), max_images=110)  # make a new list of the concatenated images
-    list_frames = sorted(list_frames)  # re-read frames, in case they are cut, re-arranged in loading
     
     print('\nBuilding Part based AAM for the clip ' + clip_name)
     aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=diagonal_aam,
@@ -87,7 +86,7 @@ def process_clip(clip_name):
                             n_appearance=n_appearance, sampling_mask=sampling_mask)
     del aam
 
-    clip = Clip(clip_name, path_clips, frames, path_init_sh + clip_name + '/', pts_folder)
+    clip = Clip(clip_name, path_0, frames, in_landmarks_fol, pts_folder)
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, clip) for frame_name in list_frames)
     fitter = []  # reset fitter
 

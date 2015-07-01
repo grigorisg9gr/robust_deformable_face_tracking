@@ -6,7 +6,7 @@ from utils.clip import Clip
 import numpy as np
 from menpo.shape import PointCloud
 from joblib import Parallel, delayed
-from menpodetect.ffld2 import FFLD2Detector, load_ffld2_frontal_face_detector, train_ffld2_detector
+from menpodetect.ffld2 import FFLD2Detector, train_ffld2_detector
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpo.landmark import LandmarkGroup
 import dlib

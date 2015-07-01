@@ -118,14 +118,13 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
         print('Warning: The images cannot be negative, loading the whole list instead.')
         max_images = len(list_frames)
     cnt = 0  # counter for images appended to the list
-    for i, frame_name in enumerate(list_frames):
-        name = frame_name[:-4]          # name of the image without the extension
+    for frame_name in list_frames:
         try:
             im = mio.import_image(frames_path + frame_name, normalise=True)
         except ValueError:                                      # in case the extension is unknown (by menpo)
             print('Ignoring the \'image\' %s' % frame_name)
             continue
-        res = glob.glob(path_land + clip_name + '/' + name + '*.pts')
+        res = glob.glob(path_land + clip_name + '/' + im.path.stem + '*.pts')
         if len(res) == 0:                       # if the image does not have any existing landmarks, ignore it
             continue
         elif len(res) > 1:
