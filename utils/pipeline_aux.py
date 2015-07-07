@@ -41,7 +41,7 @@ def crop_rescale_img(im, crop_reading=0.3, pix_thres=230):
     1) makes it greyscale,2) crops it around landmarks (group='PTS'), 3) rescales it
     """
     try:
-        im.crop_to_landmarks_proportion_inplace(crop_reading)
+        im = im.crop_to_landmarks_proportion(crop_reading)
     except ValueError:
         print('The image has %d groups of landmarks, could not perform cropping.' % im.landmarks.n_groups)
         return im

@@ -39,7 +39,8 @@ def _aux(im, pts_paths, pts_names, pts_formats, save_path, save_original, off1, 
         centre = im.landmarks[pts_names[0]].lms.centre()
         min_indices = np.array([round(centre[0])-off1, round(centre[1])-off2])
         max_indices = np.array([round(centre[0])+off1, round(centre[1])+off2])
-        im.crop_inplace(min_indices, max_indices)
+        # im.crop_inplace(min_indices, max_indices)
+        im = im.crop(min_indices, max_indices)
     else:
         path_tmp = im.path
         im = Image.init_blank([off1*2 + 1, off2*2 + 1], im.n_channels)

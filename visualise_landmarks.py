@@ -20,7 +20,7 @@ if __name__ == '__main__':
 proportion = 0.2
 figure_size = (10, 8)
 overwrite = True
-save_original = False #True
+save_original = True
 frames_format = '.png'
 
 
