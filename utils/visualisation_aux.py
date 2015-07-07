@@ -23,7 +23,11 @@ def _render(im, pts_names, fig, colours, markersizes, edgesizes, figure_size):
     return renderer
 
 
-def _aux(im, pts_paths, pts_names, pts_formats, save_path, save_original, off1, off2, figure_size, overwrite, render_options):
+def _aux(im, pts_paths, pts_names, pts_formats, save_path, save_original, off1, off2, figure_size, overwrite, render_options, only_ln=False):
+    if only_ln:  # case of visualising only landmarks (black background)
+        path_tmp = im.path
+        im = Image.init_blank([im.shape[0], im.shape[1]], im.n_channels)
+        im.path = path_tmp
     # attach landmarks
     for k, pts_path in enumerate(pts_paths):
         if os.path.isfile(pts_path + im.path.stem + pts_formats[k]):
@@ -69,7 +73,7 @@ def _aux(im, pts_paths, pts_names, pts_formats, save_path, save_original, off1, 
 
 def generate_frames_max_bbox(frames_path, frames_format, pts_paths, pts_formats, pts_names, save_path,
                              proportion, figure_size, overwrite, save_original,
-                             render_options, verbose=True):
+                             render_options, only_ln=False, verbose=True):
     # find crop offset
     print('Computing max bounding box:')
     bounds_x = []
@@ -92,13 +96,13 @@ def generate_frames_max_bbox(frames_path, frames_format, pts_paths, pts_formats,
     try:
         from joblib import Parallel, delayed
         Parallel(n_jobs=-1, verbose=4)(delayed(_aux)(im, pts_paths, pts_names, pts_formats, save_path, save_original,
-                                                     off1, off2, figure_size, overwrite, render_options)
+                                                     off1, off2, figure_size, overwrite, render_options, only_ln=only_ln)
                                        for im in mio.import_images(frames_path + '*' + frames_format, verbose=False));
     except:
         print('Sequential execution')
         for im in mio.import_images(frames_path + '*' + frames_format, verbose=verbose):
             _aux(im, pts_paths, pts_names, pts_formats, save_path, save_original,
-                 off1, off2, figure_size, overwrite, render_options);
+                 off1, off2, figure_size, overwrite, render_options, only_ln=only_ln);
 
 
 

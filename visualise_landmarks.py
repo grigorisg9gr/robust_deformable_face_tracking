@@ -31,7 +31,7 @@ if __name__ == '__main__':
 proportion = 0.2
 figure_size = (10, 8)
 overwrite = True
-save_original = True
+save_original = False
 
 # paths and format of images
 pts_format = ['_0' + pts_type_out]
@@ -39,7 +39,7 @@ path_f = path_clips + frames
 list_clips = sorted(os.listdir(path_f))
 frames_format = check_img_type(list_clips, path_f)
 
-def for_each_landmark_folder(fold_landm, save_path_0):
+def for_each_landmark_folder(fold_landm, save_path_0, only_ln=False):
     save_path = mkdir_p(save_path_0 + fold_landm + '/')
     for clip in list_clips:
         path_frames = path_f + clip + '/'
@@ -49,17 +49,17 @@ def for_each_landmark_folder(fold_landm, save_path_0):
         print(clip)
         save_path_i = mkdir_p(save_path + clip + '/')
         imgs = generate_frames_max_bbox(path_frames, frames_format, [path_lndm],
-                                        pts_format, [fold_landm],
-                                        save_path_i, proportion, figure_size, overwrite, save_original, render_options)
+                                        pts_format, [fold_landm], save_path_i, proportion, figure_size,
+                                        overwrite, save_original, render_options, only_ln=only_ln)
 
 
-def simple_visualise(path_clips, list_landm):
+def simple_visualise(path_clips, list_landm, only_ln=False):
     print('Simple visualisation of individual landmark techniques was chosen.')
     save_path_0 = path_clips + foldvis + '/'
     for landm in list_landm:
         if not check_if_path(path_clips + landm + '/', ''):
             continue
-        for_each_landmark_folder(landm, save_path_0)
+        for_each_landmark_folder(landm, save_path_0, only_ln=only_ln)
 
 
 def ln_folder_existence(list_landm, path_clips):
@@ -107,5 +107,7 @@ def compare_main(path_clips, list_landm, pts_format):
 
 if method == 'compare':
     compare_main(path_clips, list_landm, pts_format)
+elif sys.argv[2] == 'vln':  # visualise landmarks only
+    simple_visualise(path_clips, list_landm, only_ln=True)
 else:
     simple_visualise(path_clips, list_landm)
