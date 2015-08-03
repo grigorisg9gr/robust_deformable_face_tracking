@@ -1,5 +1,5 @@
 import menpo.io as mio
-from utils import (mkdir_p, check_if_path, print_fancy)
+from utils import (mkdir_p, check_if_path, print_fancy, Logger)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
 from utils.pipeline_aux import (check_img_type, im_read_greyscale, check_initial_path, check_path_and_landmarks, load_images)
 from utils.clip import Clip
@@ -10,6 +10,7 @@ from menpodetect.ffld2 import FFLD2Detector, train_ffld2_detector
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpo.landmark import LandmarkGroup
 import dlib
+from cyffld2 import load_model
 
 
 if __name__ == '__main__':
@@ -31,7 +32,12 @@ p_det_0 = path_clips + out_bb_fol
 p_det_1 = path_clips + out_landmarks_fol
 p_det_bb_0 = path_clips + in_bb_fol  # existing bbox of detection
 p_save_model = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved
+overwrite = False
 
+
+import datetime
+log = mkdir_p(path_clips + 'logs/') + datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_2_ffld_verification.log'
+sys.stdout = Logger(log)
 
 
 predictor_dlib = dlib.shape_predictor(path_shape_pred)
@@ -64,38 +70,40 @@ def predict_in_frame(frame_name, clip):
 
 
 
-negative_images = [i.as_greyscale(mode='channel', channel=1) for i in mio.import_images('/vol/atlas/homes/pts08/non_person_images',normalise=False, max_images=200)]
+negative_images = [i.as_greyscale(mode='channel', channel=1) for i in mio.import_images('/vol/atlas/homes/pts08/non_person_images',normalise=False, max_images=300)]
 detector = []
-def process_clip(clip_name):
+def process_clip(clip_name, overwrite=True):
+    # overwrite: overwrite the training of the FFLD model.
     print clip_name
     frames_path = path_clips + frames + clip_name + '/'
-    # if not(os.path.isdir(p_det_bb_read)):
-    #     print('Skipped clip ' + clip_name + ' because it does not have previous landmarks (detect)')
-    #     return
     if not check_path_and_landmarks(frames_path, clip_name, p_det_bb_0 + clip_name + '/'):  # check that paths, landmarks exist
         return
 
     list_frames = sorted(os.listdir(frames_path))
-    # build the detector
+    save_model = p_save_model + clip_name + '.model'
+    if (not os.path.exists(save_model)) or overwrite:
+        # build the detector
+        training_pos = load_images(list_frames, frames_path, p_det_bb_0, clip_name, max_images=400)
+        if len(training_pos) == 0:
+            print('No positives found for the clip %s, skipping it.' % clip_name)
+            return
+        ps_model = train_ffld2_detector(training_pos, negative_images, n_components=1, n_relabel=6)
+        ps_model.save(save_model)
+    else:
+        print('The model {} already exists and was loaded from disk.'.format(save_model))
+        ps_model = load_model(save_model)
     global detector
-    training_pos = load_images(list_frames, frames_path, p_det_bb_0, clip_name, max_images=300)
-    if len(training_pos) == 0:
-        print('No positives found for the clip %s, skipping it.' % clip_name)
-        return
-    print len(training_pos), training_pos[0].shape
-    ps_model = train_ffld2_detector(training_pos, negative_images, n_components=1, n_relabel=4)
-    ps_model.save(p_save_model + clip_name + '.model')
     detector = FFLD2Detector(ps_model)
 
     p_det_bb = mkdir_p(p_det_0 + clip_name + '/')
     p_det_landm = mkdir_p(p_det_1 + clip_name + '/')
     clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
-
+    # TODO: Try parallel model
     [predict_in_frame(frame_name, clip) for frame_name in list_frames]
 
 print_fancy('Training person specific model with FFLD')
 list_clips = sorted(os.listdir(path_clips + frames))
 img_type = check_img_type(list_clips, path_clips + frames)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
-[process_clip(clip_name) for clip_name in list_clips];
+[process_clip(clip_name, overwrite=overwrite) for clip_name in list_clips];
 
 

@@ -42,6 +42,8 @@ def crop_rescale_img(im, crop_reading=0.3, pix_thres=230):
     """
     try:
         im = im.crop_to_landmarks_proportion(crop_reading)
+    except AttributeError:   # temp till gn-dpm is officially in menpo.
+        im.crop_to_landmarks_proportion_inplace(crop_reading)
     except ValueError:
         print('The image has %d groups of landmarks, could not perform cropping.' % im.landmarks.n_groups)
         return im

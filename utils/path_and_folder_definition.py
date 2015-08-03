@@ -2,6 +2,9 @@ __author__ = 'gchrysos'
 # definition of paths and folders useful for the pipeline.
 # Change with caution, as changes will be reflected to the whole pipeline.
 
+import os
+sep = os.path.sep  # separator (should be '/' for Linux and '\' for Windows).
+
 __p_base_db = '/vol/atlas/databases/'
 
 # paths of public databases used for trainings
@@ -25,16 +28,16 @@ if not (__db_p(path_to_helen, 'helen') and __db_p(path_to_ibug, 'ibug') and __db
 
 
 # folders for reading and writing in the project clips
-foldvis = 'visualisations/' # folder where all image visualisations are
-frames  = 'frames/'   # folder for reading the frames/images
-foldcmp = 'compare/'  # folder for visual comparisons (will be inside visualisations by default)
+foldvis = 'visualisations' + sep  # folder where all image visualisations are
+frames  = 'frames' + sep  # folder for reading the frames/images
+foldcmp = 'compare' + sep  # folder for visual comparisons (will be inside visualisations by default)
 
 visual = 0              # whether the landmarks should be exported during the process (1 for yes)
 img_type_out = '.png'   # extension (and type) of the images that will be exported
 pts_type_out = '.pts'
 
 list_done=[]            # clips that should not be processed
-#list_done =['830386', '821238', '830844', '2Girls1Cup_crazy_reaction_1', '830183'];
+#list_done =['830386', '821238', '830183'];
 
 # definition of colours for visualisation
 # OLD visualisations:

@@ -18,9 +18,9 @@ if __name__ == '__main__':
         in_landmarks_test_fol, out_landmarks_fol = '4_fit_pbaam/', '5_svm_faces/'
 
 
-from menpo.feature import no_op, fast_dsift
+from menpo.feature import no_op, fast_dsift, hog
 feat = fast_dsift
-patch_s = (12, 12)
+patch_s = (14, 14)
 crop_reading = 0.2
 pix_thres = 170
 
@@ -138,11 +138,13 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
         return
     res = glob.glob(path_read_sh + clip_name + '/' + im.path.stem + '*.pts')
     im_org = im  #im_org = im.copy(); im = feat(im); #keep a copy of the nimage if features in image level
+    # print im.path.stem, len(res)
     for kk, ln_n in enumerate(res):
         ln = mio.import_landmark_file(ln_n)
         im_cp = im.copy()
         im_cp.landmarks['PTS'] = ln
-        im_cp.crop_to_landmarks_proportion_inplace(0.2);  im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
+        # im_cp.crop_to_landmarks_proportion_inplace(0.2);  im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
+        im_cp = im_cp.crop_to_landmarks_proportion(0.2); im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
         im2 = warp_image_to_reference_shape(im_cp, refFrame)
         _p_nd = im2.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten()
         decision = clf.decision_function(_p_nd)
@@ -159,7 +161,7 @@ def process_clip(clip_name, refFrame):
         return
 
     pts_folder = mkdir_p(path_fitted_aam + clip_name + '/')
-    # [process_frame(frame_name) for frame_name in list_frames];
+    #[process_frame(frame_name, frames_path, pts_folder,clip_name, refFrame) for frame_name in list_frames];
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
                                                           clip_name, refFrame) for frame_name in list_frames)
 

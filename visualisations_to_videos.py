@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
 # import the function that reads frames and converts them to videos
 sys.path.append('/vol/atlas/homes/grigoris/gits/pyutils/')
-import from_frames_to_videos as fr2vid
+import frames2videos as fr2vid
 import resize_image as rim
 
 if not check_if_path(path_clips, 'The visualisation path (%s) does not seem to exist' % path_clips):

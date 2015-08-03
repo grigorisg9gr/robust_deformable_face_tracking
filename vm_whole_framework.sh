@@ -35,12 +35,13 @@ echo $PATH1
   #echo 'function to make part-based AAM for landmark correction'
   ####$PYTHON_P isface_svm_training_and_testing_fast_whole_folder.py $PATH1 $S1_DL $S4_AAM $S5_SVM
   #echo 'train svm and detect wrongly localised faces'
-  $PYTHON_P svm_isface_general.py $PATH1 $S4_AAM $S5_SVM
+  python  svm_isface_general.py $PATH1 $S4_AAM $S5_SVM
   $PYTHON_P 2_pb_aam_correct_missed_frames_automatically_whole_folder.py $PATH1  $S5_SVM $S4_AAM $S6_AAM
-  $PYTHON_P svm_isface_general.py $PATH1 $S6_AAM $S7_SVM
+  python  svm_isface_general.py $PATH1 $S6_AAM $S7_SVM
 #  $PYTHON_P visualisations_to_videos.py $PATH1 
   echo 'converting to videos all frames written during the different steps'
-  python visualise_landmarks.py $PATH1 $S7_SVM  
+  python visualise_landmarks.py $PATH1 c $S7_SVM $S1_DL 
+  python visualise_landmarks.py $PATH1 g $S7_SVM
   #date  > date_whole_framework
   echo 'finished'
   $PYTHON_P completion_mail.py  $PATH1 $S1_DL $S2_DPM $S4_AAM $S5_SVM $S6_AAM $S7_SVM

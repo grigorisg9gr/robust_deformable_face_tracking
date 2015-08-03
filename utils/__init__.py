@@ -1,6 +1,8 @@
 
 
-import os, shutil
+import os
+import sys
+import shutil
 import errno
 
 def mkdir_p(path):
@@ -95,3 +97,19 @@ def print_fancy(str1, str_after='\n'):
         print('| ' + str1 + ' |')
         print(s)
     print(str_after)
+
+
+class Logger(object):
+    # Log files -> http://stackoverflow.com/a/5916874/1716869
+    def __init__(self, filename='Default.log'):
+        self.terminal = sys.stdout
+        self.log = open(filename, 'a')
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
+    def __getattr__(self, attr):
+        return getattr(self.terminal, attr)
+
+
