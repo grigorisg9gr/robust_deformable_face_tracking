@@ -34,9 +34,8 @@ p_det_bb_0 = path_clips + in_bb_fol  # existing bbox of detection
 p_save_model = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved
 overwrite = False
 
-
-import datetime
-log = mkdir_p(path_clips + 'logs' + sep) + datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_2_ffld_verification.log'
+# Log file output.
+log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_2_ffld.log'
 sys.stdout = Logger(log)
 
 

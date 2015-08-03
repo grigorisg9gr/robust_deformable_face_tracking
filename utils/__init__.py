@@ -5,6 +5,8 @@ import sys
 import shutil
 import errno
 
+sep = os.path.sep
+
 def mkdir_p(path):
     """
     'mkdir -p' in Python from http://stackoverflow.com/a/11860637/1716869
@@ -54,9 +56,9 @@ def find_image_type(dirname, fname):
     else:
         import imghdr
         try:
-            type1 = imghdr.what(dirname + '/' + fname)
+            type1 = imghdr.what(dirname + sep + fname)
         except IOError:
-            raise IOError('The file %s does not exist.\n' % (dirname + '/' + fname))
+            raise IOError('The file %s does not exist.\n' % (dirname + sep + fname))
         if type1 in extensions:
             return type1
         else:
@@ -67,15 +69,15 @@ def remove_empty_folders(path):
     """
     Accepts a path/directory and removes all empty folders in that path (not the empty ones in the subfolders).
     """
-    if not check_if_path(path, 'The path (%s) is not valid.' % path):
+    if not check_if_path(path, 'The path {} is not valid.'.format(path)):
         return -1
     sub_folders = os.listdir(path)
     for fol in sub_folders:
-        p1 = path + fol + '/'
+        p1 = path + fol + sep
         if not check_if_path(p1, ''):  # then it is not a folder
             continue
         if len(os.listdir(p1)) == 0:
-            print('The folder %s is empty, removing' % fol)
+            print('The folder {} is empty, removing.'.format(fol))
             rm_if_exists(p1)
 
 

@@ -1,6 +1,6 @@
 
 import menpo.io as mio
-from utils import (mkdir_p, check_if_path)
+from utils import (mkdir_p, check_if_path, Logger)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
 from utils.pipeline_aux import (check_img_type, im_read_greyscale, check_initial_path)
 from utils.clip import Clip
@@ -26,6 +26,10 @@ if __name__ == '__main__':
 # definition of paths
 p_det_1 = path_clips + out_landmarks_fol
 p_det_bb_0 = path_clips + out_bb_fol       # save bbox of detection
+
+# Log file output.
+log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_1_dlib.log'
+sys.stdout = Logger(log)
 
 
 def detection_to_pointgraph(detection):

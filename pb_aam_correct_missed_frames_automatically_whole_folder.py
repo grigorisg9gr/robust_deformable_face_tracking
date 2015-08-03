@@ -30,6 +30,10 @@ path_clips = path_0 + frames
 path_init_sh = path_0 + in_landmarks_fol
 path_fitted_aam = path_0 + out_landmarks_fol
 
+# Log file output.
+log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_4_gndpm.log'
+sys.stdout = Logger(log)
+
 # read the images from the public databases (ibug, helen)
 training_images = read_public_images(path_to_ibug, max_images=130, training_images=[], crop_reading=crop_reading, pix_thres=pix_thres) # 130
 training_images = read_public_images(path_to_helen, max_images=320, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres) #220

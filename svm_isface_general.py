@@ -30,6 +30,10 @@ path_read_sh = path_0 + in_landmarks_test_fol
 path_fitted_aam = mkdir_p(path_0 + out_landmarks_fol)
 path_pickle_svm = mkdir_p(path_pickles + 'general_svm' + sep)
 
+# Log file output.
+log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_svm.log'
+sys.stdout = Logger(log)
+
 
 import xml.etree.ElementTree as ET
 def has_person(path):

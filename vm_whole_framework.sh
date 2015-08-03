@@ -26,11 +26,11 @@ fi
 function call_framework(){
 echo 'subprocess called'
 echo $PATH1
-#  python dlib_predictor.py $PATH1 $S1_DL_BB $S1_DL
+  python dlib_predictor.py $PATH1 $S1_DL_BB $S1_DL
 #  ## matlab -nodisplay -r 'cd /vol/atlas/homes/grigoris/external/dpm_matlab/voc-dpm/;startup; train_dpm_for_all_clips_in_folder();exit()'  #old version
 #  matlab -nodisplay -r 'cd /vol/atlas/homes/grigoris/external/dpm_matlab/voc-dpm/;run_with_override('\'$PATH1\'');exit()'
   #python dlib_predictor-predict_from_bb.py $PATH1  
-#  python ffld2.py $PATH1
+  python ffld2.py $PATH1
   $PYTHON_P pb_aam_correct_missed_frames_automatically_whole_folder.py $PATH1  $S3_DL $S4_AAM
   #echo 'function to make part-based AAM for landmark correction'
   ####$PYTHON_P isface_svm_training_and_testing_fast_whole_folder.py $PATH1 $S1_DL $S4_AAM $S5_SVM
