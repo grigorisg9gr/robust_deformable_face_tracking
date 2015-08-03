@@ -11,11 +11,11 @@ if __name__ == '__main__':
     path_0 = check_initial_path(args, sys.argv)
 
     if args > 3:
-        in_landmarks_fol = str(sys.argv[2]) + '/'
-        out_landmarks_fol = str(sys.argv[3]) + '/'
+        in_landmarks_fol = str(sys.argv[2]) + sep
+        out_landmarks_fol = str(sys.argv[3]) + sep
         print in_landmarks_fol, '   ', out_landmarks_fol
     else:
-        in_landmarks_fol, out_landmarks_fol = '3_dlib_pred/', '4_fit_pbaam/'
+        in_landmarks_fol, out_landmarks_fol = '3_dlib_pred' + sep, '4_fit_pbaam' + sep
 
 
 from menpo.feature import no_op, fast_dsift
@@ -67,11 +67,11 @@ def process_clip(clip_name):
     print('\nStarted processing of clip ' + clip_name)
     global fitter
     # paths and list of frames
-    frames_path = path_clips + clip_name + '/'
+    frames_path = path_clips + clip_name + sep
     list_frames = sorted(os.listdir(frames_path))
     if not check_path_and_landmarks(frames_path, clip_name, path_init_sh + clip_name):  # check that paths, landmarks exist
         return
-    pts_folder = mkdir_p(path_fitted_aam + clip_name + '/')
+    pts_folder = mkdir_p(path_fitted_aam + clip_name + sep)
     
     # loading images from the clip
     training_detector = load_images(list(list_frames), frames_path, path_init_sh, clip_name,

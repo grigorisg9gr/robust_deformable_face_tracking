@@ -11,11 +11,11 @@ if __name__ == '__main__':
     path_0 = check_initial_path(args, sys.argv)
 
     if 2 < args < 5:
-        in_landmarks_test_fol = str(sys.argv[2]) + '/'
-        out_landmarks_fol = str(sys.argv[3]) + '/'
+        in_landmarks_test_fol = str(sys.argv[2]) + sep
+        out_landmarks_fol = str(sys.argv[3]) + sep
         print in_landmarks_test_fol, '   ', out_landmarks_fol
     else:
-        in_landmarks_test_fol, out_landmarks_fol = '4_fit_pbaam/', '5_svm_faces/'
+        in_landmarks_test_fol, out_landmarks_fol = '4_fit_pbaam' + sep, '5_svm_faces' + sep
 
 
 from menpo.feature import no_op, fast_dsift, hog
@@ -28,7 +28,7 @@ pix_thres = 170
 path_clips = path_0 + frames
 path_read_sh = path_0 + in_landmarks_test_fol
 path_fitted_aam = mkdir_p(path_0 + out_landmarks_fol)
-path_pickle_svm = mkdir_p(path_pickles + 'general_svm/')
+path_pickle_svm = mkdir_p(path_pickles + 'general_svm' + sep)
 
 
 import xml.etree.ElementTree as ET
@@ -136,7 +136,7 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
     im = im_read_greyscale(frame_name, frames_path, img_type)
     if not im:
         return
-    res = glob.glob(path_read_sh + clip_name + '/' + im.path.stem + '*.pts')
+    res = glob.glob(path_read_sh + clip_name + sep + im.path.stem + '*.pts')
     im_org = im  #im_org = im.copy(); im = feat(im); #keep a copy of the nimage if features in image level
     # print im.path.stem, len(res)
     for kk, ln_n in enumerate(res):
@@ -149,18 +149,18 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
         _p_nd = im2.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten()
         decision = clf.decision_function(_p_nd)
         if decision > 0:
-            ending = ln_n.rfind('/')  # find the ending of the filepath (the name of this landmark file)
+            ending = ln_n.rfind(sep)  # find the ending of the filepath (the name of this landmark file)
             shutil.copy2(ln_n, pts_folder + ln_n[ending+1:])
 
 
 def process_clip(clip_name, refFrame):
     print clip_name
-    frames_path = path_clips + clip_name + '/'
+    frames_path = path_clips + clip_name + sep
     list_frames = sorted(os.listdir(frames_path))
     if not check_path_and_landmarks(frames_path, clip_name, path_read_sh + clip_name): # check that paths, landmarks exist
         return
 
-    pts_folder = mkdir_p(path_fitted_aam + clip_name + '/')
+    pts_folder = mkdir_p(path_fitted_aam + clip_name + sep)
     #[process_frame(frame_name, frames_path, pts_folder,clip_name, refFrame) for frame_name in list_frames];
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
                                                           clip_name, refFrame) for frame_name in list_frames)

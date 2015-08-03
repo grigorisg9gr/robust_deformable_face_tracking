@@ -1,12 +1,13 @@
 
 import os,sys
 from utils import (check_if_path, remove_empty_folders)
+sep = os.path.sep
 
 overwrite = False # Overwrite old written videos
 if __name__ == '__main__':
     args = len(sys.argv)
     if args > 1:
-        path_clips = str(sys.argv[1]) + '/visualisations/'
+        path_clips = str(sys.argv[1]) + sep + 'visualisations' + sep
     else:
         raise RuntimeError('file not called with initial path')
     if args > 2:
@@ -30,7 +31,7 @@ def call_video_maker(path_clips, vid_fold):
     for i in list_paths:
         if i == 'compare':
             continue
-        p1 = path_clips + i + '/'
+        p1 = path_clips + i + sep
         # if: a) the video folder exists, b) it has sufficient files, c) overwrite == False, then continue
         if check_if_path(p1, '') and (not overwrite) and check_if_path(p1 + vid_fold, ''):
             len_clips = len(os.listdir(p1))
@@ -44,21 +45,21 @@ def call_video_maker(path_clips, vid_fold):
         if len(os.listdir(p1)) == 0:
             continue
         try:
-            rim.bulkResize(path_clips + i + '/')
+            rim.bulkResize(path_clips + i + sep)
         except TypeError as e:
-            print('Probably there is a folder with no images (%s), skipping it.' % (path_clips + i + '/'))
+            print('Probably there is a folder with no images (%s), skipping it.' % (path_clips + i + sep))
             print(e)
             continue
         except IOError as e:
             print('Probably image not found, skipping this video')
             print(e)
             continue
-        fr2vid.main(path_clips + i + '/', vid_fold=vid_fold)
+        fr2vid.main(path_clips + i + sep, vid_fold=vid_fold)
     remove_empty_folders(path_clips)
 
 
 # call from parent folder of visualisations, it will make videos for all different steps of the algorithm
 vid_fold = '1_videos'
 call_video_maker(path_clips, vid_fold)
-if check_if_path(path_clips + 'compare/', ''):  # call for comparisons as well
-    call_video_maker(path_clips + 'compare/', vid_fold)
+if check_if_path(path_clips + 'compare' + sep, ''):  # call for comparisons as well
+    call_video_maker(path_clips + 'compare' + sep, vid_fold)

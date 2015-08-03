@@ -18,14 +18,14 @@ if __name__ == '__main__':
     path_clips = check_initial_path(args, sys.argv)
 
     if 2 < args < 7:
-        in_bb_fol = str(sys.argv[2]) + '/'
-        out_bb_fol = str(sys.argv[3]) + '/'
-        out_model_fol = str(sys.argv[4]) + '/'
-        out_landmarks_fol = str(sys.argv[5]) + '/'
+        in_bb_fol = str(sys.argv[2]) + sep
+        out_bb_fol = str(sys.argv[3]) + sep
+        out_model_fol = str(sys.argv[4]) + sep
+        out_landmarks_fol = str(sys.argv[5]) + sep
         print in_bb_fol, '   ', out_landmarks_fol
     else:
-        in_bb_fol = '1_dlib_detect/'
-        out_bb_fol, out_model_fol, out_landmarks_fol = '2_ffld/', '2_ffld_models/', '3_ffld_ln/'
+        in_bb_fol = '1_dlib_detect' + sep
+        out_bb_fol, out_model_fol, out_landmarks_fol = '2_ffld' + sep, '2_ffld_models' + sep, '3_ffld_ln' + sep
 
 
 p_det_0 = path_clips + out_bb_fol
@@ -36,7 +36,7 @@ overwrite = False
 
 
 import datetime
-log = mkdir_p(path_clips + 'logs/') + datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_2_ffld_verification.log'
+log = mkdir_p(path_clips + 'logs' + sep) + datetime.datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_2_ffld_verification.log'
 sys.stdout = Logger(log)
 
 
@@ -75,8 +75,8 @@ detector = []
 def process_clip(clip_name, overwrite=True):
     # overwrite: overwrite the training of the FFLD model.
     print clip_name
-    frames_path = path_clips + frames + clip_name + '/'
-    if not check_path_and_landmarks(frames_path, clip_name, p_det_bb_0 + clip_name + '/'):  # check that paths, landmarks exist
+    frames_path = path_clips + frames + clip_name + sep
+    if not check_path_and_landmarks(frames_path, clip_name, p_det_bb_0 + clip_name + sep):  # check that paths, landmarks exist
         return
 
     list_frames = sorted(os.listdir(frames_path))
@@ -95,8 +95,8 @@ def process_clip(clip_name, overwrite=True):
     global detector
     detector = FFLD2Detector(ps_model)
 
-    p_det_bb = mkdir_p(p_det_0 + clip_name + '/')
-    p_det_landm = mkdir_p(p_det_1 + clip_name + '/')
+    p_det_bb = mkdir_p(p_det_0 + clip_name + sep)
+    p_det_landm = mkdir_p(p_det_1 + clip_name + sep)
     clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
     # TODO: Try parallel model
     [predict_in_frame(frame_name, clip) for frame_name in list_frames]

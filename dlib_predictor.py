@@ -16,11 +16,11 @@ if __name__ == '__main__':
     path_clips = check_initial_path(args, sys.argv)
 
     if 2 < args < 5:
-        out_landmarks_fol = str(sys.argv[3]) + '/'
-        out_bb_fol = str(sys.argv[2]) + '/'
+        out_landmarks_fol = str(sys.argv[3]) + sep
+        out_bb_fol = str(sys.argv[2]) + sep
         print out_landmarks_fol, '   ', out_bb_fol
     else:
-        out_landmarks_fol, out_bb_fol = '1_dlib_pred/', '1_dlib_detect/'
+        out_landmarks_fol, out_bb_fol = '1_dlib_pred' + sep, '1_dlib_detect' + sep
 
 
 # definition of paths
@@ -57,13 +57,13 @@ def process_clip(clip_name):
     Function that processes one clip. It creates the essential paths (for landmarks and visualisations)
     and then calls the function detect_in_frame for each frame of the clip.
     """
-    frames_path = path_clips + frames + clip_name + '/'
+    frames_path = path_clips + frames + clip_name + sep
     list_frames = sorted(os.listdir(frames_path))
     if not check_if_path(frames_path, 'Skipped clip ' + clip_name + ' because its path of frames is not valid'):
         return
     print(clip_name)
-    p_det_bb = mkdir_p(p_det_bb_0 + clip_name + '/')  # save bbox of detection
-    p_det_landm = mkdir_p(p_det_1 + clip_name + '/')
+    p_det_bb = mkdir_p(p_det_bb_0 + clip_name + sep)  # save bbox of detection
+    p_det_landm = mkdir_p(p_det_1 + clip_name + sep)
     clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
 
     Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip) for frame_name in list_frames);

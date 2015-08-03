@@ -40,14 +40,14 @@ list_clips = sorted(os.listdir(path_f))
 frames_format = check_img_type(list_clips, path_f)
 
 def for_each_landmark_folder(fold_landm, save_path_0, only_ln=False):
-    save_path = mkdir_p(save_path_0 + fold_landm + '/')
+    save_path = mkdir_p(save_path_0 + fold_landm + sep)
     for clip in list_clips:
-        path_frames = path_f + clip + '/'
-        path_lndm = path_clips + fold_landm + '/' + clip + '/'
+        path_frames = path_f + clip + sep
+        path_lndm = path_clips + fold_landm + sep + clip + sep
         if not check_path_and_landmarks(path_frames, clip, path_lndm):
             continue
         print(clip)
-        save_path_i = mkdir_p(save_path + clip + '/')
+        save_path_i = mkdir_p(save_path + clip + sep)
         imgs = generate_frames_max_bbox(path_frames, frames_format, [path_lndm],
                                         pts_format, [fold_landm], save_path_i, proportion, figure_size,
                                         overwrite, save_original, render_options, only_ln=only_ln)
@@ -55,9 +55,9 @@ def for_each_landmark_folder(fold_landm, save_path_0, only_ln=False):
 
 def simple_visualise(path_clips, list_landm, only_ln=False):
     print('Simple visualisation of individual landmark techniques was chosen.')
-    save_path_0 = path_clips + foldvis + '/'
+    save_path_0 = path_clips + foldvis + sep
     for landm in list_landm:
-        if not check_if_path(path_clips + landm + '/', ''):
+        if not check_if_path(path_clips + landm + sep, ''):
             continue
         for_each_landmark_folder(landm, save_path_0, only_ln=only_ln)
 
@@ -65,7 +65,7 @@ def simple_visualise(path_clips, list_landm, only_ln=False):
 def ln_folder_existence(list_landm, path_clips):
     list_landm_f = []
     for landm in list_landm:
-        if not check_if_path(path_clips + landm + '/', ''):
+        if not check_if_path(path_clips + landm + sep, ''):
             continue
         list_landm_f.append(landm)
     if len(list_landm_f) == 0:
@@ -79,27 +79,27 @@ def output_folder_name(list_landm_f, save_path_1):
     _pattern = re.compile('[^a-zA-Z0-9]+')
     name_fold = ''.join(map(lambda x: '%s_' % _pattern.sub('', x), list_landm_f))
     name_fold = name_fold[:-1]          # stripping the last _
-    save_path_2 = mkdir_p(save_path_1 + name_fold + '/')
+    save_path_2 = mkdir_p(save_path_1 + name_fold + sep)
     return save_path_2
 
 
 def compare_main(path_clips, list_landm, pts_format):
     # main method for comparing landmarks. Old compare_landmarks.py option.
     print('Comparison method was chosen.')
-    save_path_1 = path_clips + foldvis + '/' + foldcmp + '/'
+    save_path_1 = path_clips + foldvis + sep + foldcmp + sep
     list_landm_f = ln_folder_existence(list_landm, path_clips)
     pts_format *= len(list_landm_f)     # replicate list elements as many times as the different landmark groups
     save_path_2 = output_folder_name(list_landm_f, save_path_1)
 
     for clip in list_clips:
-        path_frames = path_f + clip + '/'
+        path_frames = path_f + clip + sep
         path_landm = []
         for landm in list_landm_f:
-            if not check_if_path(path_clips + landm + '/' + clip + '/', ''):
+            if not check_if_path(path_clips + landm + sep + clip + sep, ''):
                 continue
-            path_landm.append(path_clips + landm + '/' + clip + '/')
+            path_landm.append(path_clips + landm + sep + clip + sep)
         print(clip)
-        save_path_i = mkdir_p(save_path_2 + clip + '/')
+        save_path_i = mkdir_p(save_path_2 + clip + sep)
         imgs = generate_frames_max_bbox(path_frames, frames_format, path_landm,
                                         pts_format, list_landm_f,
                                         save_path_i, proportion, figure_size, overwrite, save_original, render_options)
