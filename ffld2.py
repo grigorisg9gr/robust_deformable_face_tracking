@@ -13,39 +13,40 @@ import dlib
 from cyffld2 import load_model
 
 
-if __name__ == '__main__':
-    args = len(sys.argv)
-    path_clips = check_initial_path(args, sys.argv)
+def main_for_ps_detector(path_clips, in_bb_fol, out_bb_fol, out_model_fol, out_landmarks_fol, overwrite=False):
+    # define a dictionary for the paths
+    paths = {}
+    paths['clips'] = path_clips
+    paths['in_bb'] = path_clips + in_bb_fol  # existing bbox of detection
+    paths['out_bb'] = path_clips + out_bb_fol       # save bbox of detection
+    paths['out_lns'] = path_clips + out_landmarks_fol
+    paths['out_model'] = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved.
 
-    if 2 < args < 7:
-        in_bb_fol = str(sys.argv[2]) + sep
-        out_bb_fol = str(sys.argv[3]) + sep
-        out_model_fol = str(sys.argv[4]) + sep
-        out_landmarks_fol = str(sys.argv[5]) + sep
-        print in_bb_fol, '   ', out_landmarks_fol
-    else:
-        in_bb_fol = '1_dlib_detect' + sep
-        out_bb_fol, out_model_fol, out_landmarks_fol = '2_ffld' + sep, '2_ffld_models' + sep, '3_ffld_ln' + sep
+    # p_det_0 = path_clips + out_bb_fol
+    # p_det_1 = path_clips + out_landmarks_fol
+    # p_det_bb_0 = path_clips + in_bb_fol  # existing bbox of detection
+    # p_save_model = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved
+    # overwrite = False
 
+    # Log file output.
+    log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_2_ffld.log'
+    sys.stdout = Logger(log)
 
-p_det_0 = path_clips + out_bb_fol
-p_det_1 = path_clips + out_landmarks_fol
-p_det_bb_0 = path_clips + in_bb_fol  # existing bbox of detection
-p_save_model = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved
-overwrite = False
-
-# Log file output.
-log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_2_ffld.log'
-sys.stdout = Logger(log)
+    print_fancy('Training person specific model with FFLD')
+    list_clips = sorted(os.listdir(path_clips + frames))
+    img_type = check_img_type(list_clips, path_clips + frames)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
+    [process_clip(clip_name, paths, img_type, overwrite=overwrite) for clip_name in list_clips];
 
 
 predictor_dlib = dlib.shape_predictor(path_shape_pred)
+negative_images = [i.as_greyscale(mode='channel', channel=1) for i in mio.import_images('/vol/atlas/homes/pts08/non_person_images',normalise=False, max_images=300)]
+detector = []
 
 def detection_to_pointgraph(detection):
     return PointCloud(np.array([(p.y, p.x) for p in detection.parts()]))
 
     
-def predict_in_frame(frame_name, clip):
+def predict_in_frame(frame_name, clip, img_type):
     global detector
     im = im_read_greyscale(frame_name, clip.path_frames, img_type, normalise=False)
 
@@ -65,26 +66,24 @@ def predict_in_frame(frame_name, clip):
         # convert to landmarks
         det_frame = predictor_dlib(im_pili, pointgraph_to_rect(ln.lms))
         init_pc = detection_to_pointgraph(det_frame)
-        mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc), clip.path_write_ln[1] + pts_end, overwrite=True)
+        mio.export_landmark_file(LandmarkGroup.init_with_all_label(init_pc),
+                                 clip.path_write_ln[1] + pts_end, overwrite=True)
 
 
-
-negative_images = [i.as_greyscale(mode='channel', channel=1) for i in mio.import_images('/vol/atlas/homes/pts08/non_person_images',normalise=False, max_images=300)]
-detector = []
-def process_clip(clip_name, overwrite=True):
+def process_clip(clip_name, paths, img_type, overwrite=True):
     # overwrite: overwrite the training of the FFLD model.
-    print clip_name
-    frames_path = path_clips + frames + clip_name + sep
-    if not check_path_and_landmarks(frames_path, clip_name, p_det_bb_0 + clip_name + sep):  # check that paths, landmarks exist
+    print(clip_name)
+    frames_path = paths['clips'] + frames + clip_name + sep
+    if not check_path_and_landmarks(frames_path, clip_name, paths['in_bb'] + clip_name + sep):  # check that paths, landmarks exist
         return
 
     list_frames = sorted(os.listdir(frames_path))
-    save_model = p_save_model + clip_name + '.model'
+    save_model = paths['out_model'] + clip_name + '.model'
     if (not os.path.exists(save_model)) or overwrite:
         # build the detector
-        training_pos = load_images(list_frames, frames_path, p_det_bb_0, clip_name, max_images=400)
+        training_pos = load_images(list_frames, frames_path, paths['in_bb'], clip_name, max_images=400)
         if len(training_pos) == 0:
-            print('No positives found for the clip %s, skipping it.' % clip_name)
+            print('No positives found for the clip {}, skipping it.'.format(clip_name))
             return
         ps_model = train_ffld2_detector(training_pos, negative_images, n_components=1, n_relabel=6)
         ps_model.save(save_model)
@@ -94,15 +93,27 @@ def process_clip(clip_name, overwrite=True):
     global detector
     detector = FFLD2Detector(ps_model)
 
-    p_det_bb = mkdir_p(p_det_0 + clip_name + sep)
-    p_det_landm = mkdir_p(p_det_1 + clip_name + sep)
-    clip = Clip(clip_name, path_clips, frames, write_ln=[p_det_bb, p_det_landm])
+    p_det_bb = mkdir_p(paths['out_bb'] + clip_name + sep)
+    p_det_landm = mkdir_p(paths['out_lns'] + clip_name + sep)
+    clip = Clip(clip_name, paths['clips'], frames, write_ln=[p_det_bb, p_det_landm])
     # TODO: Try parallel model
-    [predict_in_frame(frame_name, clip) for frame_name in list_frames]
+    [predict_in_frame(frame_name, clip, img_type) for frame_name in list_frames]
 
-print_fancy('Training person specific model with FFLD')
-list_clips = sorted(os.listdir(path_clips + frames))
-img_type = check_img_type(list_clips, path_clips + frames)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
-[process_clip(clip_name, overwrite=overwrite) for clip_name in list_clips];
+
+if __name__ == '__main__':
+    args = len(sys.argv)
+    path_clips_m = check_initial_path(args, sys.argv)
+
+    if 2 < args < 7:
+        in_bb_fol_m = str(sys.argv[2]) + sep
+        out_bb_fol_m = str(sys.argv[3]) + sep
+        out_model_fol_m = str(sys.argv[4]) + sep
+        out_landmarks_fol_m = str(sys.argv[5]) + sep
+        print(in_bb_fol_m, '   ', out_landmarks_fol_m)
+    else:
+        in_bb_fol_m = '1_dlib_detect' + sep
+        out_bb_fol_m, out_model_fol_m, out_landmarks_fol_m = '2_ffld' + sep, \
+                                                             '2_ffld_models' + sep, '3_ffld_ln' + sep
+    main_for_ps_detector(path_clips_m, in_bb_fol_m, out_bb_fol_m, out_model_fol_m, out_landmarks_fol_m, overwrite=False)
 
 

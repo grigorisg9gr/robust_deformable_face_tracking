@@ -1,6 +1,6 @@
-__author__ = 'gchrysos'
-import os
 
+import os
+sep = os.path.sep
 # grigoris, files that are useful for the pipeline of detection.
 # Several functions in this file require menpo or other menpo functionalities to execute
 
@@ -29,7 +29,7 @@ def check_img_type(list_clips, path_clips, cnt=0):
             return img_type
         l1 = os.listdir(p1)
         if len(l1) == 0:
-            raise RuntimeError('The path (%s) seems to be empty, so cannot find images or their extension' % p1)
+            raise RuntimeError('The path {} seems to be empty, so cannot find images or their extension.'.format(p1))
         img_type = '.' + find_image_type(p1, l1[0])
         return img_type
     return img_type
@@ -45,7 +45,7 @@ def crop_rescale_img(im, crop_reading=0.3, pix_thres=230):
     except AttributeError:   # temp till gn-dpm is officially in menpo.
         im.crop_to_landmarks_proportion_inplace(crop_reading)
     except ValueError:
-        print('The image has %d groups of landmarks, could not perform cropping.' % im.landmarks.n_groups)
+        print('The image has {} groups of landmarks, could not perform cropping.'.format(im.landmarks.n_groups))
         return im
     if im.n_channels == 3:                                   # convert images to greyscale if they are not
         im = im.as_greyscale(mode='luminosity')
@@ -60,8 +60,8 @@ def check_path_and_landmarks(frames_path, clip_name, landmark_path):
     If one of them does not exist, it returns False.
     It uses the check_if_path().
     """
-    msg1 = 'Skipped clip ' + clip_name + ' because it is not a valid path'
-    msg2 = 'Skipped clip ' + clip_name + ' because it does not have previous landmarks'
+    msg1 = 'Skipped clip ' + clip_name + ' because it is not a valid path.'
+    msg2 = 'Skipped clip ' + clip_name + ' because it does not have previous landmarks.'
     return check_if_path(frames_path, msg1) and check_if_path(landmark_path, msg2)
 
 
@@ -78,7 +78,7 @@ def read_public_images(path_to_db, max_images=100, training_images=None, crop_re
     """
     import menpo.io as mio
     if not(os.path.isdir(path_to_db)):
-        raise RuntimeError('The path to the public DB images does not exist. Try with a valid path')
+        raise RuntimeError('The path to the public DB images does not exist. Try with a valid path.')
     if feat is None:
         feat = no_op
     if training_images is None:
@@ -91,7 +91,8 @@ def read_public_images(path_to_db, max_images=100, training_images=None, crop_re
     return training_images
 
 
-def load_images(list_frames, frames_path, path_land, clip_name, max_images=None, training_images=None, crop_reading=0.3, pix_thres=330, feat=None):
+def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
+                training_images=None, crop_reading=0.3, pix_thres=330, feat=None):
     """
     Read images from the clips that are processed. The landmarks can be a different folder with the extension of pts and
     are searched as such.
@@ -124,15 +125,15 @@ def load_images(list_frames, frames_path, path_land, clip_name, max_images=None,
         try:
             im = mio.import_image(frames_path + frame_name, normalise=True)
         except ValueError:                                      # in case the extension is unknown (by menpo)
-            print('Ignoring the \'image\' %s' % frame_name)
+            print('Ignoring the \'image\' {}.'.format(frame_name))
             continue
-        res = glob.glob(path_land + clip_name + '/' + im.path.stem + '*.pts')
+        res = glob.glob(path_land + clip_name + sep + im.path.stem + '*.pts')
         if len(res) == 0:                       # if the image does not have any existing landmarks, ignore it
             continue
         elif len(res) > 1:
             #_r = randint(0,len(res)-1); #just for debugging reasons in different variable
             #ln = mio.import_landmark_file(res[_r]) # in case there are plenty of landmarks for the image, load random ones
-            print('The image %s has more than one landmarks, for one person, loading only the first ones' % frame_name)
+            print('The image {} has more than one landmarks, for one person, loading only the first ones.'.format(frame_name))
         ln = mio.import_landmark_file(res[0])
         im.landmarks['PTS'] = ln
         im = crop_rescale_img(im, crop_reading=crop_reading, pix_thres=pix_thres)
@@ -176,7 +177,7 @@ def check_initial_path(args, argv):
     if args > 1:
         path_clips = str(argv[1])
         if not(os.path.isdir(path_clips)):
-            raise RuntimeError('The path %s does not exist as a base folder' % path_clips)
+            raise RuntimeError('The path {} does not exist as a base folder'.format(path_clips))
         return path_clips
     else:
-        raise RuntimeError('file not called with initial path')
+        raise RuntimeError('File not called with initial path.')

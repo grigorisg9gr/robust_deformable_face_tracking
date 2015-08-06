@@ -8,7 +8,7 @@ sep = os.path.sep  # separator (should be '/' for Linux and '\' for Windows).
 __p_base_db = '/vol/atlas/databases/'
 
 # paths of public databases used for trainings
-path_to_helen = __p_base_db + 'helen/trainset/' # helen trainset
+path_to_helen = __p_base_db + 'helen/trainset/'  # helen trainset
 path_to_ibug = __p_base_db + 'ibug/'
 path_to_lfpw = __p_base_db + 'lfpw/trainset/'
 path_to_cofw = '/vol/atlas/homes/grigoris/external/cofw/frames/trainset/'
@@ -37,7 +37,7 @@ img_type_out = '.png'   # extension (and type) of the images that will be export
 pts_type_out = '.pts'
 
 list_done=[]            # clips that should not be processed
-#list_done =['830386', '821238', '830183'];
+# list_done =['830386', '821238', '830183'];
 
 # definition of colours for visualisation
 # OLD visualisations:

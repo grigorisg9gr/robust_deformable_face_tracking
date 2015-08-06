@@ -17,7 +17,7 @@ if __name__ == '__main__':
         in_landmarks_fol = str(sys.argv[2]) + '/'
         in_landmarks_fol_test = str(sys.argv[3]) + '/'
         out_landmarks_fol = str(sys.argv[4]) + '/'
-        print in_landmarks_fol, '   ', out_landmarks_fol
+        print(in_landmarks_fol, '   ', out_landmarks_fol)
     else:
         in_landmarks_fol = '5_svm_faces/'
         in_landmarks_fol_test = '5_svm_faces/'

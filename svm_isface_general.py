@@ -1,5 +1,5 @@
 import menpo.io as mio
-from utils import (mkdir_p, print_fancy)
+from utils import (mkdir_p, print_fancy, Logger)
 from utils.pipeline_aux import (read_public_images, check_img_type, im_read_greyscale,
                                 check_path_and_landmarks, check_initial_path)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     if 2 < args < 5:
         in_landmarks_test_fol = str(sys.argv[2]) + sep
         out_landmarks_fol = str(sys.argv[3]) + sep
-        print in_landmarks_test_fol, '   ', out_landmarks_fol
+        print(in_landmarks_test_fol, '   ', out_landmarks_fol)
     else:
         in_landmarks_test_fol, out_landmarks_fol = '4_fit_pbaam' + sep, '5_svm_faces' + sep
 
@@ -31,7 +31,7 @@ path_fitted_aam = mkdir_p(path_0 + out_landmarks_fol)
 path_pickle_svm = mkdir_p(path_pickles + 'general_svm' + sep)
 
 # Log file output.
-log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_svm.log'
+log = mkdir_p(path_0 + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_svm.log'
 sys.stdout = Logger(log)
 
 
@@ -142,7 +142,6 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
         return
     res = glob.glob(path_read_sh + clip_name + sep + im.path.stem + '*.pts')
     im_org = im  #im_org = im.copy(); im = feat(im); #keep a copy of the nimage if features in image level
-    # print im.path.stem, len(res)
     for kk, ln_n in enumerate(res):
         ln = mio.import_landmark_file(ln_n)
         im_cp = im.copy()
@@ -158,7 +157,7 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
 
 
 def process_clip(clip_name, refFrame):
-    print clip_name
+    print(clip_name)
     frames_path = path_clips + clip_name + sep
     list_frames = sorted(os.listdir(frames_path))
     if not check_path_and_landmarks(frames_path, clip_name, path_read_sh + clip_name): # check that paths, landmarks exist
