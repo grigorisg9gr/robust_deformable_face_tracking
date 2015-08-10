@@ -86,7 +86,7 @@ def compare_main(path_related, viewing_options):
     path_related['pts_format'] *= len(list_landm_f)     # replicate list elements as many times as the different landmark groups
     save_path_2 = output_folder_name(list_landm_f, save_path_1)
 
-    for clip in path_related['list_landm']:
+    for clip in path_related['list_clips']:
         path_frames = path_related['path_f'] + clip + sep
         path_landm = []
         for landm in list_landm_f:

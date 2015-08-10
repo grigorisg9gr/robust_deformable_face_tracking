@@ -26,6 +26,7 @@ def main_for_ps_detector(path_clips, in_ln_fol, out_ln_fol):
     # read the images from the public databases (ibug, helen)
     training_images = read_public_images(path_to_ibug, max_images=130, training_images=[], crop_reading=crop_reading, pix_thres=pix_thres) # 130
     training_images = read_public_images(path_to_helen, max_images=220, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres) #220
+    training_images = read_public_images(path_closed_eyes, max_images=60, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres)
 
     list_clips = sorted(os.listdir(path_clips + frames))
     img_type = check_img_type(list_clips, path_clips)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
