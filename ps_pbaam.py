@@ -1,9 +1,10 @@
 import menpo.io as mio
-from utils import (mkdir_p, print_fancy, Logger)
+from utils import (mkdir_p, print_fancy, Logger, strip_separators_in_the_end)
 from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images,
                                 check_initial_path, im_read_greyscale)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
 from utils.clip import Clip
+from menpo.io import export_pickle
 from joblib import Parallel, delayed
 # imports for GN-DPM builder/fitter:
 from alabortijcv2015.aam import PartsAAMBuilder
@@ -11,12 +12,13 @@ from alabortijcv2015.aam import PartsAAMFitter
 from alabortijcv2015.aam.algorithm import SIC
 
 
-def main_for_ps_detector(path_clips, in_ln_fol, out_ln_fol):
+def main_for_ps_detector(path_clips, in_ln_fol, out_ln_fol, out_model_fol):
     # define a dictionary for the paths
     paths = {}
     paths['clips'] = path_clips
     paths['in_lns'] = path_clips + in_ln_fol  # existing bbox of detection
     paths['out_lns'] = path_clips + out_ln_fol
+    paths['out_model'] = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved.
 
     # Log file output.
     log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_4_gndpm.log'
@@ -29,7 +31,7 @@ def main_for_ps_detector(path_clips, in_ln_fol, out_ln_fol):
     training_images = read_public_images(path_closed_eyes, max_images=60, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres)
 
     list_clips = sorted(os.listdir(path_clips + frames))
-    img_type = check_img_type(list_clips, path_clips)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
+    img_type = check_img_type(list_clips, path_clips + frames)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
     t = [process_clip(clip_name, paths, in_ln_fol, training_images, img_type) for clip_name in list_clips
          if not(clip_name in list_done) and os.path.isdir(path_clips + frames + clip_name)]
 
@@ -84,6 +86,9 @@ def process_clip(clip_name, paths, in_ln_fol, training_images, img_type):
     
     fitter = PartsAAMFitter(aam, algorithm_cls=algorithm_cls, n_shape=n_shape,
                             n_appearance=n_appearance, sampling_mask=sampling_mask)
+    # save the AAM model (requires plenty of disk space for each model).
+    # aam.features = None
+    # export_pickle(aam, paths['out_model'] + clip_name + '.pkl', overwrite=True)
     del aam
 
     clip = Clip(clip_name, paths['clips'], frames, in_ln_fol, pts_folder)
@@ -102,6 +107,7 @@ if __name__ == '__main__':
         print(in_landmarks_fol_m, '   ', out_landmarks_fol_m)
     else:
         in_landmarks_fol_m, out_landmarks_fol_m = '3_dlib_pred' + sep, '4_fit_pbaam' + sep
-    main_for_ps_detector(path_0_m, in_landmarks_fol_m, out_landmarks_fol_m)
+    out_model_fol_m = strip_separators_in_the_end(out_landmarks_fol_m) + '_models' + sep
+    main_for_ps_detector(path_0_m, in_landmarks_fol_m, out_landmarks_fol_m, out_model_fol_m)
 
 

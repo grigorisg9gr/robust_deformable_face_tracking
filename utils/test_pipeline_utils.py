@@ -1,6 +1,7 @@
-import sys, os
+import sys
+import os
 from mock import patch
-
+from nose.tools import raises
 
 def random_string_gen(range1=12):
     import string
@@ -9,7 +10,10 @@ def random_string_gen(range1=12):
 
 # redirect output for testing
 from contextlib import contextmanager
-from StringIO import StringIO
+try:                                # compatibility with python2 and python3.
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 @contextmanager
 def captured_output():
@@ -32,18 +36,19 @@ def init_imports():
 
 fake_path = '/tmp/test.fake/'
 
+
 def test_init_functions():
     assert(init_imports() == 1)   # confirm that all imports work
 
     p1 = './' + random_string_gen(25)
     msg = random_string_gen(23)
-    from __init__ import check_if_path
-    with captured_output() as (out, err):   # check_if_path prints the right message for non-existent paths
+    from ..utils import check_if_path
+    with captured_output() as (out, err):   # check_if_path prints the right message for non-existent paths.
         check_if_path(p1, msg)
         output = out.getvalue().strip()
         assert(output == msg)
 
-    assert(check_if_path('.', '') is True) # should return True, since this is a path
+    assert(check_if_path('.', '') is True)  # should return True, since this is a path.
 
     # fake_path = '/tmp/test.fake/'
     # tt = check_if_path(fake_path, '')
@@ -73,18 +78,18 @@ def test_pipeline_aux():
         check_img_type(['greg', 'l1', 'm1'], fake_path)
         assert('valid path' in fake_out.getvalue())
 
-    # print os.listdir('.')
+    # print(os.listdir('.'))
     # with captured_output() as (out, err):
     #     load_images(os.listdir('.'), fake_path, fake_path, '', max_images=-5) # check for negative images
     #     output = out.getvalue().strip()
     #     assert('negative' in output)
-    # print output
+    # print(output)
 
 
 
 def test_pipeline_aux_load_images():
     with patch('sys.stdout', new=StringIO()) as fake_out:
-        load_images(os.listdir('.'), '.', '.', '', max_images=-5) # check for negative number of images
+        load_images(os.listdir('.'), '.', '.', '', max_images=-5)  # check for negative number of images
         assert('negative' in fake_out.getvalue())
         assert('Ignoring' in fake_out.getvalue())                 # since python files are here, at least once it should fail to read an image
 
@@ -95,10 +100,24 @@ def test_pipeline_aux_load_images():
     with patch('sys.stdout', new=StringIO()) as fake_out:         # check for not valid path
         if not os.path.isdir(fake_path):
             ret = load_images(os.listdir('.'), fake_path, fake_path, '', max_images=5)
-            print fake_out
+            print(fake_out)
             assert('not a valid path' in fake_out.getvalue())
             assert(ret == [])
 
+@raises(AssertionError)
+def test_strip_separators_in_the_end_error():
+    from ..utils import strip_separators_in_the_end
+    strip_separators_in_the_end(9)
 
 
+def test_strip_separators_in_the_end():
+    from ..utils import strip_separators_in_the_end
+    name = 'fake1'
+    name1 = name + os.path.sep
+    assert(name == strip_separators_in_the_end(name1))  # one sep in the end
+    assert(name == strip_separators_in_the_end(name))  # no sep in the end
 
+    name1 += os.path.sep*3
+    assert(name == strip_separators_in_the_end(name1))  # several sep in the end
+
+    assert('' == strip_separators_in_the_end(''))  # several sep in the end

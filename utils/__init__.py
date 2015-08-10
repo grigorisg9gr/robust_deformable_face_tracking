@@ -58,11 +58,11 @@ def find_image_type(dirname, fname):
         try:
             type1 = imghdr.what(dirname + sep + fname)
         except IOError:
-            raise IOError('The file %s does not exist.\n' % (dirname + sep + fname))
+            raise IOError('The file {} does not exist.\n'.format(dirname + sep + fname))
         if type1 in extensions:
             return type1
         else:
-            raise ValueError('%s is not supported type (extension) of image' % type1)
+            raise ValueError('{} is not supported type (extension) of image.'.format(type1))
 
 
 def remove_empty_folders(path):
@@ -113,5 +113,18 @@ class Logger(object):
 
     def __getattr__(self, attr):
         return getattr(self.terminal, attr)
+
+
+def strip_separators_in_the_end(name):
+    """
+    Strips the separators in the end of a string (file-name).
+    :param name:    Path or folder to strip the separators in the end.
+    :return:        The path/folder without the separators in the end.
+    """
+    assert(isinstance(name, str))
+    sep = os.path.sep
+    while len(name) > 0 and name[-1] == sep:
+        name = name[:-1]
+    return name
 
 

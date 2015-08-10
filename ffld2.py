@@ -1,5 +1,5 @@
 import menpo.io as mio
-from utils import (mkdir_p, check_if_path, print_fancy, Logger)
+from utils import (mkdir_p, strip_separators_in_the_end, print_fancy, Logger)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
 from utils.pipeline_aux import (check_img_type, im_read_greyscale, check_initial_path, check_path_and_landmarks, load_images)
 from utils.clip import Clip
@@ -21,12 +21,6 @@ def main_for_ps_detector(path_clips, in_bb_fol, out_bb_fol, out_model_fol, out_l
     paths['out_bb'] = path_clips + out_bb_fol       # save bbox of detection
     paths['out_lns'] = path_clips + out_landmarks_fol
     paths['out_model'] = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved.
-
-    # p_det_0 = path_clips + out_bb_fol
-    # p_det_1 = path_clips + out_landmarks_fol
-    # p_det_bb_0 = path_clips + in_bb_fol  # existing bbox of detection
-    # p_save_model = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved
-    # overwrite = False
 
     # Log file output.
     log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_2_ffld.log'
@@ -107,8 +101,8 @@ if __name__ == '__main__':
     if 2 < args < 7:
         in_bb_fol_m = str(sys.argv[2]) + sep
         out_bb_fol_m = str(sys.argv[3]) + sep
-        out_model_fol_m = str(sys.argv[4]) + sep
-        out_landmarks_fol_m = str(sys.argv[5]) + sep
+        out_landmarks_fol_m = str(sys.argv[4]) + sep
+        out_model_fol_m = strip_separators_in_the_end(out_bb_fol_m) + '_models' + sep
         print(in_bb_fol_m, '   ', out_landmarks_fol_m)
     else:
         in_bb_fol_m = '1_dlib_detect' + sep
