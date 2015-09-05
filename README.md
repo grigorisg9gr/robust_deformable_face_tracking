@@ -10,9 +10,9 @@ The script will produce and save the results in folders that will be created in 
 
 Explanation of the files:
 
-* dlib_predictor.py: Uses pre-trained (generic) detector to detect the bounding box of the face and then applies a shape predictor (from dlib).
-* ffld2.py: Trains a person specific detector, based on the input bounding boxes and then detects using that model. Additionally, it applies the same shape predictor as dlib_predictor.
-* ps_pbaam: Trains a generic + ps part-based AAM and then fits it on the person.
-* svm_is_face: Checks whether the landmarks correspond to an actual human face. If the trained SVM does not exist, it trains it.
+* dlib_predictor.py: Uses pre-trained (generic) detector to detect the bounding box of the face and then applies a shape predictor/regressor (from dlib).
+* ffld2.py: Trains a person specific detector. It utilises the input bounding boxes of the previous step to train the model and then detects using that model. Additionally, it applies the same shape predictor as in dlib_predictor.py.
+* ps_pbaam.py: Trains a generic + ps part-based AAM and then fits it on the person.
+* svm_is_face.py: Checks whether the landmarks correspond to an actual human face. If the trained SVM does not exist (pickle file), it trains it.
 
 

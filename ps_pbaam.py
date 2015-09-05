@@ -87,8 +87,9 @@ def process_clip(clip_name, paths, in_ln_fol, training_images, img_type):
     fitter = PartsAAMFitter(aam, algorithm_cls=algorithm_cls, n_shape=n_shape,
                             n_appearance=n_appearance, sampling_mask=sampling_mask)
     # save the AAM model (requires plenty of disk space for each model).
-    # aam.features = None
-    # export_pickle(aam, paths['out_model'] + clip_name + '.pkl', overwrite=True)
+    aam.features = None
+    export_pickle(aam, paths['out_model'] + clip_name + '.pkl', overwrite=True)
+    aam.features = features
     del aam
 
     clip = Clip(clip_name, paths['clips'], frames, in_ln_fol, pts_folder)

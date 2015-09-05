@@ -1,0 +1,6 @@
+*~
+*.pyc
+.idea/*
+tmp.txt
+wisdom.fftw
+
