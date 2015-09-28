@@ -15,4 +15,5 @@ Explanation of the files:
 * ps_pbaam.py: Trains a generic + ps part-based AAM and then fits it on the person.
 * svm_is_face.py: Checks whether the landmarks correspond to an actual human face. If the trained SVM does not exist (pickle file), it trains it.
 
+Version for menpo.0.5.x. Used for 300vw competition annotation. 
 
