@@ -70,7 +70,6 @@ def process_clip(clip_name, paths, img_type, overwrite=True):
     frames_path = paths['clips'] + frames + clip_name + sep
     if not check_path_and_landmarks(frames_path, clip_name, paths['in_bb'] + clip_name + sep):  # check that paths, landmarks exist
         return
-
     list_frames = sorted(os.listdir(frames_path))
     save_model = paths['out_model'] + clip_name + '.model'
     if (not os.path.exists(save_model)) or overwrite:

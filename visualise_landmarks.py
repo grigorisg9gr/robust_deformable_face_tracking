@@ -41,11 +41,14 @@ def for_each_landmark_folder(fold_landm, save_path_0, path_related, viewing_opti
             continue
         print(clip)
         save_path_i = mkdir_p(save_path + clip + sep)
-        imgs = generate_frames_max_bbox(path_frames, path_related['frames_format'], [path_lndm],
+        try:  # hack, problem with boundaries
+            imgs = generate_frames_max_bbox(path_frames, path_related['frames_format'], [path_lndm],
                                         path_related['pts_format'], [fold_landm], save_path_i,
                                         viewing_options['proportion'], viewing_options['figure_size'],
                                         viewing_options['overwrite'], viewing_options['save_original'],
                                         render_options, only_ln=only_ln)
+        except:
+            pass
 
 
 def simple_visualise(path_related, viewing_options, only_ln=False):

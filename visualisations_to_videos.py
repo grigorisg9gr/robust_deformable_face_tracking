@@ -42,15 +42,15 @@ def call_video_maker(path_clips, vid_fold, overwrite=False):
         if len(os.listdir(p1)) == 0:
             continue
         try:
-            rim.bulkResize(path_clips + i + sep)
+           rim.bulkResize(path_clips + i + sep)
         except TypeError as e:
-            print('Probably there is a folder with no images {}, skipping it.'.format(path_clips + i + sep))
-            print(e)
-            continue
+           print('Probably there is a folder with no images {}, skipping it.'.format(path_clips + i + sep))
+           print(e)
+           continue
         except IOError as e:
-            print('Probably image not found, skipping this video.')
-            print(e)
-            continue
+           print('Probably image not found, skipping this video.')
+           print(e)
+           continue
         fr2vid.main(path_clips + i + sep, vid_fold=vid_fold)
     remove_empty_folders(path_clips)
 
@@ -58,6 +58,7 @@ def call_video_maker(path_clips, vid_fold, overwrite=False):
 if __name__ == '__main__':
     overwrite_m = False  # Overwrite old written videos
     args = len(sys.argv)
+    # path_0_m = '/vol/atlas/homes/grigoris/company_videos/external/stefanos_3_septem/'
     if args > 1:
         path_0_m = str(sys.argv[1])
     else:

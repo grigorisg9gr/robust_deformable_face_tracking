@@ -7,9 +7,12 @@ from utils.clip import Clip
 from menpo.io import export_pickle
 from joblib import Parallel, delayed
 # imports for GN-DPM builder/fitter:
-from alabortijcv2015.aam import PartsAAMBuilder
-from alabortijcv2015.aam import PartsAAMFitter
-from alabortijcv2015.aam.algorithm import SIC
+# from alabortijcv2015.aam import PartsAAMBuilder
+# from alabortijcv2015.aam import PartsAAMFitter
+# from alabortijcv2015.aam.algorithm import SIC
+from menpofit.aam import PatchAAM
+from menpofit.aam.algorithm import WibergForwardCompositional as fit_alg
+from menpofit.aam import LucasKanadeAAMFitter
 
 
 def main_for_ps_detector(path_clips, in_ln_fol, out_ln_fol, out_model_fol):
@@ -26,8 +29,8 @@ def main_for_ps_detector(path_clips, in_ln_fol, out_ln_fol, out_model_fol):
 
     print_fancy('Building GN-DPMs for the clips')
     # read the images from the public databases (ibug, helen)
-    training_images = read_public_images(path_to_ibug, max_images=130, training_images=[], crop_reading=crop_reading, pix_thres=pix_thres) # 130
-    training_images = read_public_images(path_to_helen, max_images=220, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres) #220
+    training_images = read_public_images(path_to_ibug, max_images=130, training_images=[], crop_reading=crop_reading, pix_thres=pix_thres)
+    training_images = read_public_images(path_to_helen, max_images=220, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres)
     training_images = read_public_images(path_closed_eyes, max_images=60, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres)
 
     list_clips = sorted(os.listdir(path_clips + frames))
@@ -36,16 +39,16 @@ def main_for_ps_detector(path_clips, in_ln_fol, out_ln_fol, out_model_fol):
          if not(clip_name in list_done) and os.path.isdir(path_clips + frames + clip_name)]
 
 
-from menpo.feature import no_op, fast_dsift
+from menpo.feature import fast_dsift
 features = fast_dsift
-patch_shape = (18, 18)  # (14,14)
-crop_reading = 0.2  # 0.5
+patch_shape = (18, 18)
+crop_reading = 0.2
 pix_thres = 250
 diagonal_aam = 130
 fitter = []
 # gn-dpm params
-normalize_parts = False; scales = (1, .5)
-algorithm_cls = SIC
+scales = (1, .5)
+algorithm_cls = fit_alg
 sampling_step = 2
 sampling_mask = np.require(np.zeros(patch_shape), dtype=np.bool)
 sampling_mask[::sampling_step, ::sampling_step] = True
@@ -62,7 +65,7 @@ def process_frame(frame_name, clip, img_type):
     if not im:
         return
     im.landmarks['PTS2'] = ln
-    fr = fitter.fit(im, im.landmarks['PTS2'].lms, gt_shape=None, crop_image=0.3)
+    fr = fitter.fit_from_shape(im, im.landmarks['PTS2'].lms, crop_image=0.3)
     mio.export_landmark_file(fr.fitted_image.landmarks['final'], clip.path_write_ln + im.path.stem + '_0.pts', overwrite=True)
 
 
@@ -77,15 +80,19 @@ def process_clip(clip_name, paths, in_ln_fol, training_images, img_type):
     
     # loading images from the clip
     training_detector = load_images(list(list_frames), frames_path, paths['in_lns'], clip_name,
-                                    training_images=list(training_images), max_images=110)  # make a new list of the concatenated images
+                                    training_images=list(training_images), max_images=110)
     
     print('\nBuilding Part based AAM for the clip {}.'.format(clip_name))
-    aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=diagonal_aam,
-                          normalize_parts=normalize_parts, scales=scales).build(training_detector, verbose=True)
+    # aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=diagonal_aam,
+    #                       normalize_parts=normalize_parts, scales=scales).build(training_detector, verbose=True)
+    aam = PatchAAM(training_detector, verbose=True, holistic_features=features, patch_shape=patch_shape,
+                   diagonal=diagonal_aam, scales=scales)
     del training_detector
     
-    fitter = PartsAAMFitter(aam, algorithm_cls=algorithm_cls, n_shape=n_shape,
-                            n_appearance=n_appearance, sampling_mask=sampling_mask)
+    # fitter = PartsAAMFitter(aam, algorithm_cls=algorithm_cls, n_shape=n_shape,
+    #                         n_appearance=n_appearance, sampling_mask=sampling_mask)
+    fitter = LucasKanadeAAMFitter(aam, lk_algorithm_cls=algorithm_cls, n_shape=n_shape,
+                                  n_appearance=n_appearance, sampling=sampling_mask)
     # save the AAM model (requires plenty of disk space for each model).
     aam.features = None
     export_pickle(aam, paths['out_model'] + clip_name + '.pkl', overwrite=True)

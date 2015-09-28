@@ -8,6 +8,8 @@ from utils.pipeline_aux import (read_public_images, check_img_type, check_path_a
 from utils.path_and_folder_definition import *  # import paths for databases and folders from here
 from joblib import Parallel, delayed
 import shutil
+from menpofit.aam import PatchAAM
+from menpofit.aam import LucasKanadeAAMFitter
 
 if __name__ == '__main__':
     args = len(sys.argv)
@@ -24,10 +26,10 @@ if __name__ == '__main__':
         out_landmarks_fol = '6_fit_pbaam/'
 
 
-from menpo.feature import no_op, fast_dsift
+from menpo.feature import fast_dsift
 features = fast_dsift
-patch_shape = (18,18) #(14,14)
-crop_reading = 0.2 # 0.5
+patch_shape = (18, 18)
+crop_reading = 0.2
 pix_thres = 250
 
 path_clips   = path_0 + frames 
@@ -60,18 +62,13 @@ def process_frame(frame_name, clip_name, pts_folder, frames_path):
     if im is []:
         return
     im.landmarks['PTS2'] = ln
-    fr = fitter.fit(im, im.landmarks['PTS2'].lms, gt_shape=None, crop_image=0.3)
+    fr = fitter.fit_from_shape(im, im.landmarks['PTS2'].lms, crop_image=0.3)
     res_im = fr.fitted_image
     mio.export_landmark_file(res_im.landmarks['final'], pts_folder + name + '_0.pts', overwrite=True)
 
 
-from alabortijcv2015.aam import PartsAAMBuilder
-from alabortijcv2015.aam import PartsAAMFitter
-from alabortijcv2015.aam.algorithm import SIC
 
-
-normalize_parts = False; scales = (1, .5)
-algorithm_cls = SIC
+scales = (1, .5)
 sampling_step = 2
 sampling_mask = np.require(np.zeros(patch_shape), dtype=np.bool)
 sampling_mask[::sampling_step, ::sampling_step] = True
@@ -94,17 +91,20 @@ def process_clip(clip_name):
     list_frames = sorted(os.listdir(frames_path)) # re-read frames, in case they are cut, re-arranged in loading
     
     print('\nBuilding Part based AAM for the clip ' + clip_name)
-    aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=180,
-                          normalize_parts=normalize_parts, scales=scales).build(training_detector, verbose=True)
+    # aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=180,
+    #                       normalize_parts=normalize_parts, scales=scales).build(training_detector, verbose=True)
+    aam = PatchAAM(training_detector, verbose=True, holistic_features=features, patch_shape=patch_shape,
+                   diagonal=180, scales=scales)
     del training_detector
     
-    fitter = PartsAAMFitter(aam, algorithm_cls=algorithm_cls, n_shape=n_shape,
-                            n_appearance=n_appearance, sampling_mask=sampling_mask)
+    # fitter = PartsAAMFitter(aam, algorithm_cls=algorithm_cls, n_shape=n_shape,
+    #                         n_appearance=n_appearance, sampling_mask=sampling_mask)
+    fitter = LucasKanadeAAMFitter(aam, n_shape=n_shape, n_appearance=n_appearance, sampling=sampling_mask)
     del aam
 
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, clip_name, 
                                                           pts_folder, frames_path) for frame_name in list_frames)
-    fitter =[] #reset fitter
+    fitter =[]  # reset fitter
 
 
 list_clips = sorted(os.listdir(path_clips))

@@ -65,15 +65,17 @@ def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JP
     im_path = base_path + im_fold; anno_path = base_path + annot
     if max_loaded_images is None:
         max_loaded_images = len(list_non_faces)
-    else: 
-        max_loaded_images = min(len(list_non_faces), max_loaded_images)  # ensure that there are no more images asked than those that can be loaded
-    cnt = 0; training_images = []
+    else:
+        # ensure that there are no more images asked than those that can be loaded
+        max_loaded_images = min(len(list_non_faces), max_loaded_images)
+    cnt = 0
+    training_images = []
     for pts_f in list_non_faces:
         if cnt >= max_loaded_images:
             break
         im_n = pts_f[0:6]
         if has_person(anno_path + im_n + '.xml'):
-            continue  # check that indeed there is no person in the annotations (which is the case if extracted with open cv code)
+            continue  # confirm that there is no person (which is the case if extracted with open cv code)
         res_im = glob.glob(im_path + im_n + '.*')
         if len(res_im) == 1:
             im = mio.import_image(res_im[0])
@@ -81,9 +83,10 @@ def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JP
             continue
         ln = mio.import_landmark_file(path_faces + pts_f)
         im.landmarks['PTS'] = ln
-        cnt +=1
-        if im.n_channels == 3: im = im.as_greyscale(mode='luminosity')
-        im.crop_to_landmarks_proportion_inplace(0.2)
+        cnt += 1
+        if im.n_channels == 3:
+            im = im.as_greyscale(mode='luminosity')
+        im = im.crop_to_landmarks_proportion(0.2)
         if im.shape[0] > pix_thres or im.shape[1] > pix_thres:
             im = im.rescale_to_diagonal(pix_thres)
         training_images.append(feat(im))
@@ -94,7 +97,8 @@ def pascal_db_non_faces(base_path, path_faces, annot='Annotations/', im_fold='JP
 # Warping all images to a reference shape
 from menpo.transform import PiecewiseAffine
 from menpo.visualize import print_dynamic, progress_bar_str
-from menpofit.aam.builder import build_reference_frame
+from menpofit.builder import build_reference_frame
+
 
 def warp_all_to_reference_shape(images, meanShape):
     reference_frame = build_reference_frame(meanShape)
@@ -116,6 +120,7 @@ def warp_all_to_reference_shape(images, meanShape):
     warped_images_ndarray = warped_images_ndarray.T
     return warped_images_list, warped_images_ndarray, reference_frame
 
+
 # same as function above, but for one image
 def warp_image_to_reference_shape(i, reference_frame):
     transform = [PiecewiseAffine(reference_frame.landmarks['source'][None], i.landmarks['PTS'][None])]
@@ -126,10 +131,10 @@ def warp_image_to_reference_shape(i, reference_frame):
 
 # Extract patches around each landmark of the image
 def list_to_nd_patches(images, patch_s=(12, 12)):
-    s = images[0].extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten().shape[0]
+    s = images[0].extract_patches_around_landmarks(as_single_array=True, patch_shape=patch_s, group='source').flatten().shape[0]
     arr = np.empty((len(images), s))
-    for k,im in enumerate(images):
-        _p_nd = im.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s)
+    for k, im in enumerate(images):
+        _p_nd = im.extract_patches_around_landmarks(as_single_array=True, patch_shape=patch_s, group='source')
         arr[k, :] = _p_nd.flatten()
     return arr
 
@@ -149,7 +154,7 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
         # im_cp.crop_to_landmarks_proportion_inplace(0.2);  im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
         im_cp = im_cp.crop_to_landmarks_proportion(0.2); im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
         im2 = warp_image_to_reference_shape(im_cp, refFrame)
-        _p_nd = im2.extract_patches_around_landmarks(as_single_array=True, patch_size=patch_s).flatten()
+        _p_nd = im2.extract_patches_around_landmarks(group='source', as_single_array=True, patch_shape=patch_s).flatten()
         decision = clf.decision_function(_p_nd)
         if decision > 0:
             ending = ln_n.rfind(sep)  # find the ending of the filepath (the name of this landmark file)
@@ -164,7 +169,7 @@ def process_clip(clip_name, refFrame):
         return
 
     pts_folder = mkdir_p(path_fitted_aam + clip_name + sep)
-    #[process_frame(frame_name, frames_path, pts_folder,clip_name, refFrame) for frame_name in list_frames];
+    # [process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame) for frame_name in list_frames];
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
                                                           clip_name, refFrame) for frame_name in list_frames)
 
@@ -187,14 +192,14 @@ def load_or_train_svm():
         training_neg_im, cnt = pascal_db_non_faces(path_pascal_base, path_faces, max_loaded_images=600)
 
         # Procrustes analysis
-        print('\nPerforming Procrustes analysis for alignment of the training images')
+        print('\nPerforming Procrustes analysis for alignment of the training images.')
         from menpo.transform import GeneralizedProcrustesAnalysis as GPA
-        gpa = GPA([i.landmarks['PTS'].lms for i in training_pos_im_1] )
+        gpa = GPA([i.landmarks['PTS'].lms for i in training_pos_im_1])
         mean_shape = gpa.mean_aligned_shape()
 
         print('\nWarping the images and extracting patches')
         posim_l, _, refFrame1 = warp_all_to_reference_shape(training_pos_im_1, mean_shape)
-        negim_l, _, refFrame1 = warp_all_to_reference_shape(training_neg_im, mean_shape)
+        negim_l, _, _ = warp_all_to_reference_shape(training_neg_im, mean_shape)
 
         posim_nd = list_to_nd_patches(posim_l, patch_s)
         negim_nd = list_to_nd_patches(negim_l, patch_s)
