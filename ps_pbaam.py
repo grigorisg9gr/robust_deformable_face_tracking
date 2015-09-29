@@ -15,7 +15,7 @@ from menpofit.aam.algorithm import WibergForwardCompositional as fit_alg
 from menpofit.aam import LucasKanadeAAMFitter
 
 
-def main_for_ps_detector(path_clips, in_ln_fol, out_ln_fol, out_model_fol):
+def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol):
     # define a dictionary for the paths
     paths = {}
     paths['clips'] = path_clips
@@ -114,8 +114,8 @@ if __name__ == '__main__':
         out_landmarks_fol_m = str(sys.argv[3]) + sep
         print(in_landmarks_fol_m, '   ', out_landmarks_fol_m)
     else:
-        in_landmarks_fol_m, out_landmarks_fol_m = '3_dlib_pred' + sep, '4_fit_pbaam' + sep
+        in_landmarks_fol_m, out_landmarks_fol_m = '3_ffld_ln' + sep, '4_pbaam' + sep
     out_model_fol_m = strip_separators_in_the_end(out_landmarks_fol_m) + '_models' + sep
-    main_for_ps_detector(path_0_m, in_landmarks_fol_m, out_landmarks_fol_m, out_model_fol_m)
+    main_for_ps_aam(path_0_m, in_landmarks_fol_m, out_landmarks_fol_m, out_model_fol_m)
 
 

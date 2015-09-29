@@ -21,9 +21,9 @@ if __name__ == '__main__':
         out_landmarks_fol = str(sys.argv[4]) + '/'
         print(in_landmarks_fol, '   ', out_landmarks_fol)
     else:
-        in_landmarks_fol = '5_svm_faces/'
-        in_landmarks_fol_test = '5_svm_faces/'
-        out_landmarks_fol = '6_fit_pbaam/'
+        in_landmarks_fol = '5_svm/'
+        in_landmarks_fol_test = '5_svm/'
+        out_landmarks_fol = '6_pbaam/'
 
 
 from menpo.feature import fast_dsift

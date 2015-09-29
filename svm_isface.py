@@ -4,6 +4,7 @@ from utils.pipeline_aux import (read_public_images, check_img_type, im_read_grey
                                 check_path_and_landmarks, check_initial_path)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and visualisation options
 import shutil
+from menpo.feature import fast_dsift
 from joblib import Parallel, delayed
 
 if __name__ == '__main__':
@@ -15,10 +16,9 @@ if __name__ == '__main__':
         out_landmarks_fol = str(sys.argv[3]) + sep
         print(in_landmarks_test_fol, '   ', out_landmarks_fol)
     else:
-        in_landmarks_test_fol, out_landmarks_fol = '4_fit_pbaam' + sep, '5_svm_faces' + sep
+        in_landmarks_test_fol, out_landmarks_fol = '4_pbaam' + sep, '5_svm' + sep
 
 
-from menpo.feature import no_op, fast_dsift, hog
 feat = fast_dsift
 patch_s = (14, 14)
 crop_reading = 0.2

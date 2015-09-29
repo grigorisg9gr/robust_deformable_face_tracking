@@ -90,6 +90,6 @@ if __name__ == '__main__':
         out_bb_fol_m = str(sys.argv[2]) + sep
         print(out_landmarks_fol_m, '   ', out_bb_fol_m)
     else:
-        out_landmarks_fol_m, out_bb_fol_m = '1_dlib_pred' + sep, '1_dlib_detect' + sep
+        out_landmarks_fol_m, out_bb_fol_m = '1_pred' + sep, '1_detect' + sep
     main_for_generic_detector(path_clips_m, out_bb_fol_m, out_landmarks_fol_m)
 

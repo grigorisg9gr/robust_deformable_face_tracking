@@ -104,7 +104,7 @@ if __name__ == '__main__':
         out_model_fol_m = strip_separators_in_the_end(out_bb_fol_m) + '_models' + sep
         print(in_bb_fol_m, '   ', out_landmarks_fol_m)
     else:
-        in_bb_fol_m = '1_dlib_detect' + sep
+        in_bb_fol_m = '1_detect' + sep
         out_bb_fol_m, out_model_fol_m, out_landmarks_fol_m = '2_ffld' + sep, \
                                                              '2_ffld_models' + sep, '3_ffld_ln' + sep
     main_for_ps_detector(path_clips_m, in_bb_fol_m, out_bb_fol_m, out_model_fol_m, out_landmarks_fol_m, overwrite=False)
