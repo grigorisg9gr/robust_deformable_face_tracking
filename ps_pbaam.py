@@ -15,13 +15,18 @@ from menpofit.aam.algorithm import WibergForwardCompositional as fit_alg
 from menpofit.aam import LucasKanadeAAMFitter
 
 
-def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol):
+def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol,
+                    in_ln_fit_fol=None, max_helen=220, max_cl_e=60):
     # define a dictionary for the paths
     paths = {}
     paths['clips'] = path_clips
     paths['in_lns'] = path_clips + in_ln_fol  # existing bbox of detection
     paths['out_lns'] = path_clips + out_ln_fol
     paths['out_model'] = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved.
+    if in_ln_fit_fol:
+        paths['in_fit_lns'] = path_clips + in_ln_fit_fol
+    else:
+        paths['in_fit_lns'] = paths['in_lns']
 
     # Log file output.
     log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_4_gndpm.log'
@@ -29,22 +34,23 @@ def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol):
 
     print_fancy('Building GN-DPMs for the clips')
     # read the images from the public databases (ibug, helen)
-    training_images = read_public_images(path_to_ibug, max_images=130, training_images=[], crop_reading=crop_reading, pix_thres=pix_thres)
-    training_images = read_public_images(path_to_helen, max_images=220, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres)
-    training_images = read_public_images(path_closed_eyes, max_images=60, training_images=training_images, crop_reading=crop_reading, pix_thres=pix_thres)
+    training_images = _aux_read_public_images(path_to_ibug, 130, [])
+    training_images = _aux_read_public_images(path_to_helen, max_helen, training_images)
+    training_images = _aux_read_public_images(path_closed_eyes, max_cl_e, training_images)
 
     list_clips = sorted(os.listdir(path_clips + frames))
-    img_type = check_img_type(list_clips, path_clips + frames)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
-    t = [process_clip(clip_name, paths, in_ln_fol, training_images, img_type) for clip_name in list_clips
+    # assumption that all clips have the same extension, otherwise run in the loop for each clip separately:
+    img_type = check_img_type(list_clips, path_clips + frames)
+    t = [process_clip(clip_name, paths, training_images, img_type) for clip_name in list_clips
          if not(clip_name in list_done) and os.path.isdir(path_clips + frames + clip_name)]
 
 
 from menpo.feature import fast_dsift
 features = fast_dsift
 patch_shape = (18, 18)
-crop_reading = 0.2
+crop = 0.2  # crop when loading images from databases.
 pix_thres = 250
-diagonal_aam = 130
+# diagonal_aam = 130
 fitter = []
 # gn-dpm params
 scales = (1, .5)
@@ -53,13 +59,14 @@ sampling_step = 2
 sampling_mask = np.require(np.zeros(patch_shape), dtype=np.bool)
 sampling_mask[::sampling_step, ::sampling_step] = True
 n_shape = [3, 12]; n_appearance = [50, 100]
+# n_shape = [5, 13]; n_appearance = [50, 100]
 
 
 def process_frame(frame_name, clip, img_type):
     global fitter
     try:
-        ln = mio.import_landmark_file(clip.path_read_ln + frame_name[:frame_name.rfind('.')] + '_0.pts')
-    except:
+        ln = mio.import_landmark_file(clip.path_read_ln[0] + frame_name[:frame_name.rfind('.')] + '_0.pts')
+    except ValueError:  # either not found or no suitable importer
         return
     im = im_read_greyscale(frame_name, clip.path_frames, img_type)
     if not im:
@@ -69,7 +76,8 @@ def process_frame(frame_name, clip, img_type):
     mio.export_landmark_file(fr.fitted_image.landmarks['final'], clip.path_write_ln + im.path.stem + '_0.pts', overwrite=True)
 
 
-def process_clip(clip_name, paths, in_ln_fol, training_images, img_type):
+def process_clip(clip_name, paths, training_images, img_type, mi=110, d_aam=130):
+    # mi: max_images from clip, d_aam: diagonal of aam
     global fitter
     # paths and list of frames
     frames_path = paths['clips'] + frames + clip_name + sep
@@ -80,13 +88,13 @@ def process_clip(clip_name, paths, in_ln_fol, training_images, img_type):
     
     # loading images from the clip
     training_detector = load_images(list(list_frames), frames_path, paths['in_lns'], clip_name,
-                                    training_images=list(training_images), max_images=110)
+                                    training_images=list(training_images), max_images=mi)
     
     print('\nBuilding Part based AAM for the clip {}.'.format(clip_name))
     # aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=diagonal_aam,
     #                       normalize_parts=normalize_parts, scales=scales).build(training_detector, verbose=True)
     aam = PatchAAM(training_detector, verbose=True, holistic_features=features, patch_shape=patch_shape,
-                   diagonal=diagonal_aam, scales=scales)
+                   diagonal=d_aam, scales=scales)
     del training_detector
     
     # fitter = PartsAAMFitter(aam, algorithm_cls=algorithm_cls, n_shape=n_shape,
@@ -99,11 +107,15 @@ def process_clip(clip_name, paths, in_ln_fol, training_images, img_type):
     aam.features = features
     del aam
 
-    clip = Clip(clip_name, paths['clips'], frames, in_ln_fol, pts_folder)
+    clip = Clip(clip_name, paths['clips'], frames, [paths['in_lns'], paths['in_fit_lns']], pts_folder)
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, clip, img_type) for frame_name in list_frames)
     fitter = []  # reset fitter
     return True
 
+
+def _aux_read_public_images(path, max_images, training_images, crop=crop, pix_thres=pix_thres):
+    return read_public_images(path, max_images=max_images, training_images=training_images,
+                              crop_reading=crop, pix_thres=pix_thres)
 
 if __name__ == '__main__':
     args = len(sys.argv)
