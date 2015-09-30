@@ -25,7 +25,8 @@ s_7_svm = '7_svm_faces' + s
 def run_main(path_clips):
     main_for_generic_detector(path_clips, s_1_det, s_1_pred)
     main_for_ps_detector(path_clips, s_1_det, s_2_psd, s_2_psd[:-1] + '_models' + s, s_3_ln)
-    main_for_ps_aam(path_clips, s_3_ln, s_4_pbaam, s_4_pbaam[:-1] + '_models' + s)
+    main_for_ps_aam(path_clips, s_3_ln, s_4_pbaam, s_4_pbaam[:-1] + '_models' + s,
+                    n_shape=[3, 12], n_appearance=[50, 100])
     # TODO: Add the rest of the steps. Not finished yet. 
 
 
