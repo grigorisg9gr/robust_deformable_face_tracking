@@ -10,24 +10,28 @@ s = os.path.sep  # OS separator
 #######################################################
 #######################################################
 ##############   folders for landmarks   ##############
-s_1_det = '1_detect' + s
-s_1_pred = '1_pred' + s
-s_2_psd = '' + s
-s_3_ln = '3_ffld_ln' + s
-s_4_pbaam = '4_pbaam' + s
-s_5_svm = '5_svm' + s
-s_6_pbaam = '6_pbaam' + s
-s_7_svm = '7_svm_faces' + s
+s_1 = '1_detect' + s
+s_1_pr = '1_pred' + s
+s_2 = '2_psd' + s
+s_3 = '3_ffld_ln' + s
+s_4 = '4_pbaam' + s
+s_5 = '5_svm' + s
+s_6 = '6_pbaam' + s
+s_7 = '7_svm_faces' + s
 #######################################################
 #######################################################
 
 
 def run_main(path_clips):
-    main_for_generic_detector(path_clips, s_1_det, s_1_pred)
-    main_for_ps_detector(path_clips, s_1_det, s_2_psd, s_2_psd[:-1] + '_models' + s, s_3_ln)
-    main_for_ps_aam(path_clips, s_3_ln, s_4_pbaam, s_4_pbaam[:-1] + '_models' + s,
+    main_for_generic_detector(path_clips, s_1, s_1_pr)
+    main_for_ps_detector(path_clips, s_1, s_2, s_2[:-1] + '_models' + s, s_3)
+    main_for_ps_aam(path_clips, s_3, s_4, s_4[:-1] + '_models' + s, out_ln_svm=s_5,
                     n_shape=[3, 12], n_appearance=[50, 100])
-    # TODO: Add the rest of the steps. Not finished yet. 
+
+    main_for_ps_aam(path_clips, s_5, s_6, s_6[:-1] + '_models' + s, loop=True,
+                    d_aam=180, max_helen=400, max_cl_e=100, in_ln_fit_fol=s_4,
+                    mi=250, n_shape=[5, 13], n_appearance=[50, 100], out_ln_svm=s_7)
+    # TODO: Add tests for the steps.
 
 
 if __name__ == '__main__':

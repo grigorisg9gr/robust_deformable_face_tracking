@@ -9,8 +9,8 @@ from joblib import Parallel, delayed
 
 if __name__ == '__main__':
     args = len(sys.argv)
-    path_0 = check_initial_path(args, sys.argv)
-
+    # path_0 = check_initial_path(args, sys.argv)
+    path_0 = '/vol/atlas/homes/grigoris/company_videos/competition/sandbox/'
     if 2 < args < 5:
         in_landmarks_test_fol = str(sys.argv[2]) + sep
         out_landmarks_fol = str(sys.argv[3]) + sep
@@ -169,9 +169,9 @@ def process_clip(clip_name, refFrame):
         return
 
     pts_folder = mkdir_p(path_fitted_aam + clip_name + sep)
-    # [process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame) for frame_name in list_frames];
-    Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
-                                                          clip_name, refFrame) for frame_name in list_frames)
+    [process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame) for frame_name in list_frames];
+    # Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
+    #                                                       clip_name, refFrame) for frame_name in list_frames)
 
 
 def load_or_train_svm():

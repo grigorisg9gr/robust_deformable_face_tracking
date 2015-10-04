@@ -5,8 +5,7 @@ from utils.path_and_folder_definition import *  # import paths for databases, fo
 from utils.clip import Clip
 from joblib import Parallel, delayed
 from shutil import copy2
-import menpo.io as mio
-from menpo.io import export_pickle
+from menpo.io import export_pickle, import_landmark_file, export_landmark_file
 from menpo.transform import PiecewiseAffine
 from menpo.feature import fast_dsift
 # imports for GN-DPM builder/fitter:
@@ -24,6 +23,26 @@ fitter = []
 def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False, mi=110, d_aam=130,
                     in_ln_fit_fol=None, max_helen=220, max_cl_e=60, n_shape=None, n_appearance=None,
                     out_ln_svm=None, patch_s_svm=(14, 14), pix_th_svm=170):
+    """
+    Processes a batch of clips in the same folder. Creates the dictionary with the paths, the SVM params,
+    loads the images from public datasets and then calls the processing per clip.
+    :param path_clips:      str: Base path that contains the frames/lns folders.
+    :param in_ln_fol:       str: Folder name for importing landmarks.
+    :param out_ln_fol:      str: Folder name for exporting landmarks after AAM fit.
+    :param out_model_fol:   str: Folder name for exporting the AAM (pickled file).
+    :param loop:            bool: (optional) Declares whether this is a 2nd fit for AAM (loop).
+    :param mi:              int: (optional) Max images of the clip loaded for the pbaam.
+    :param d_aam:           int: (optional) Diagonal of AAM (param in building it).
+    :param in_ln_fit_fol:   str: (optional) Folder name for importing during fitting (loop case).
+    :param max_helen:       int: (optional) Max images of the helen dataset to be loaded.
+    :param max_cl_e:        int: (optional) Max images of the 'close eyes' dataset to be loaded.
+    :param n_shape:         int/list/None: (optional) Number of shapes for AAM (as expected in menpofit).
+    :param n_appearance:    int/list/None: (optional) Number of appearances for AAM (as expected in menpofit).
+    :param out_ln_svm:      str: (optional) Folder name for exporting landmarks after SVM (if applicable).
+    :param patch_s_svm:     tuple: (optional) Patch size for SVM (if applicable).
+    :param pix_th_svm:      int: (optional) Pixel threshold for resizing images in SVM classification.
+    :return:
+    """
     # loop: whether this is the 1st or the 2nd fit (loop).
     # define a dictionary for the paths
     assert(isinstance(n_shape, (int, float, type(None), list)))  # allowed values in menpofit.
@@ -74,26 +93,34 @@ def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False
 
 
 def process_frame(frame_name, clip, img_type, svm_p, loop=False):
-    # loop: whether this is part of GN-DPM second fit
-    # svm_p: dictionary with all the info for applying svm
+    """
+    Applies the AAM fitter (global var) in a frame. Additionally, it might apply an
+    SVM to verify it's a face if required.
+    :param frame_name: str: Name of the frame along with extension, e.g. '000001.png'.
+    :param clip:       str: Name of the clip.
+    :param img_type:   str: Suffix (extension) of the frames, e.g. '.png'.
+    :param svm_p:      dict: Required params for SVM classification.
+    :param loop:       bool: (optional) Declares whether this is a 2nd fit for AAM (loop).
+    :return:
+    """
     global fitter
     name = frame_name[:frame_name.rfind('.')]
     p0 = clip.path_read_ln[0] + name + '_0.pts'
     # find if this is 2nd fit or 1st.
     if loop:  # if 2nd fit, then if landmark is 'approved', return. Otherwise proceed.
         try:
-            ln = mio.import_landmark_file(p0)
+            ln = import_landmark_file(p0)
             copy2(p0, clip.path_write_ln[0] + name + '_0.pts')
             return      # if the landmark already exists, return (for performance improvement)
         except ValueError:
             pass
         try:
-            ln = mio.import_landmark_file(clip.path_read_ln[1] + name + '_0.pts')
+            ln = import_landmark_file(clip.path_read_ln[1] + name + '_0.pts')
         except ValueError:  # either not found or no suitable importer
             return
     else:
         try:
-            ln = mio.import_landmark_file(p0)
+            ln = import_landmark_file(p0)
         except ValueError:  # either not found or no suitable importer
             return
     im = im_read_greyscale(frame_name, clip.path_frames, img_type)
@@ -102,7 +129,7 @@ def process_frame(frame_name, clip, img_type, svm_p, loop=False):
     im.landmarks['PTS2'] = ln
     fr = fitter.fit_from_shape(im, im.landmarks['PTS2'].lms, crop_image=0.3)
     p_wr = clip.path_write_ln[0] + im.path.stem + '_0.pts'
-    mio.export_landmark_file(fr.fitted_image.landmarks['final'], p_wr, overwrite=True)
+    export_landmark_file(fr.fitted_image.landmarks['final'], p_wr, overwrite=True)
 
     # apply SVM classifier by extracting patches (is face or not).
     if not svm_p['apply']:
@@ -120,7 +147,22 @@ def process_frame(frame_name, clip, img_type, svm_p, loop=False):
 
 def process_clip(clip_name, paths, training_images, img_type, loop, svm_params,
                  mi=110, d_aam=130, n_s=None, n_a=None):
-    # mi: max_images from clip, d_aam: diagonal of aam, n_s: n_shape, n_a: n_appearance
+    """
+    Processes a clip. Accepts a clip (along with its params and paths), trains a person-specific
+    part based AAM (pbaam) and then fits it to all the frames.
+    :param clip_name:   str: Name of the clip.
+    :param paths:       dict: Required paths for training/fitting/exporting data.
+    :param training_images: list: List of menpo images (generic images) appended to the person specific ones.
+    :param img_type:    str: Suffix (extension) of the frames, e.g. '.png'.
+    :param loop:        bool: Declares whether this is a 2nd fit for AAM (loop).
+    :param svm_params:  dict: Required params for SVM classification. If 'apply' is False,
+    the rest are not used. Otherwise, requires reference frame and classifier loaded.
+    :param mi:          int: (optional) Max images of the clip loaded for the pbaam.
+    :param d_aam:       int: (optional) Diagonal of AAM (param in building it).
+    :param n_s:         int/list/None: (optional) Number of shapes for AAM (as expected in menpofit).
+    :param n_a:         int/list/None: (optional) Number of appearances for AAM (as expected in menpofit).
+    :return:
+    """
     global fitter
     # paths and list of frames
     frames_path = paths['clips'] + frames + clip_name + sep
