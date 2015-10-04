@@ -1,20 +1,29 @@
-import menpo.io as mio
 from utils import (mkdir_p, print_fancy, Logger, strip_separators_in_the_end)
 from utils.pipeline_aux import (read_public_images, check_img_type, check_path_and_landmarks, load_images,
                                 check_initial_path, im_read_greyscale)
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
 from utils.clip import Clip
-from menpo.io import export_pickle
 from joblib import Parallel, delayed
 from shutil import copy2
+import menpo.io as mio
+from menpo.io import export_pickle
+from menpo.transform import PiecewiseAffine
+from menpo.feature import fast_dsift
 # imports for GN-DPM builder/fitter:
 from menpofit.aam import PatchAAM
 from menpofit.aam.algorithm import WibergForwardCompositional as fit_alg
 from menpofit.aam import LucasKanadeAAMFitter
 
+features = fast_dsift
+patch_shape = (18, 18)
+crop = 0.2  # crop when loading images from databases.
+pix_thres = 250
+fitter = []
+
 
 def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False, mi=110, d_aam=130,
-                    in_ln_fit_fol=None, max_helen=220, max_cl_e=60, n_shape=None, n_appearance=None):
+                    in_ln_fit_fol=None, max_helen=220, max_cl_e=60, n_shape=None, n_appearance=None,
+                    out_ln_svm=None, patch_s_svm=(14, 14), pix_th_svm=170):
     # loop: whether this is the 1st or the 2nd fit (loop).
     # define a dictionary for the paths
     assert(isinstance(n_shape, (int, float, type(None), list)))  # allowed values in menpofit.
@@ -24,10 +33,27 @@ def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False
     paths['in_lns'] = path_clips + in_ln_fol  # existing bbox of detection
     paths['out_lns'] = path_clips + out_ln_fol
     paths['out_model'] = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved.
-    if in_ln_fit_fol:
-        paths['in_fit_lns'] = path_clips + in_ln_fit_fol
-    else:
-        paths['in_fit_lns'] = paths['in_lns']
+    paths['in_fit_lns'] = (path_clips + in_ln_fit_fol) if in_ln_fit_fol else paths['in_lns']
+    paths['out_svm'] = (path_clips + out_ln_svm) if out_ln_svm else None
+
+    # save the svm params in a dict in case they are required.
+    svm_params = {}
+    svm_params['apply'] = True if out_ln_svm else False  # True only if user provided path for output.
+    # load pickled files for classifier and reference frame.
+    if svm_params['apply']:
+        print('Option to classify (non-)faces with SVM is activated.')
+        svm_params['feat'] = features
+        svm_params['patch_s'] = patch_s_svm
+        name_p = features.__name__ + '_' + str(patch_s_svm[0]) + '_' + str(crop) + '_' + \
+                 str(pix_th_svm) + '_' + 'helen_' + 'ibug_' + 'lfpw'
+        path_pickle_svm = path_pickles + 'general_svm' + sep
+        if not os.path.isdir(path_pickle_svm):
+            raise RuntimeError('This path ({}) should contain the pickled file '
+                               'for the SVM and the reference frame.'.format(path_pickle_svm))
+
+        from sklearn.externals import joblib
+        svm_params['clf'] = joblib.load(path_pickle_svm + name_p + '.pkl')
+        svm_params['refFrame'] = joblib.load(path_pickle_svm + name_p + '_refFrame.pkl')
 
     # Log file output.
     log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_4_gndpm.log'
@@ -42,29 +68,14 @@ def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False
     list_clips = sorted(os.listdir(path_clips + frames))
     # assumption that all clips have the same extension, otherwise run in the loop for each clip separately:
     img_type = check_img_type(list_clips, path_clips + frames)
-    t = [process_clip(clip_name, paths, tr_images, img_type, loop, mi=mi, d_aam=d_aam,
+    t = [process_clip(clip_name, paths, tr_images, img_type, loop, svm_params, mi=mi, d_aam=d_aam,
                       n_s=n_shape, n_a=n_appearance) for clip_name in list_clips
          if not(clip_name in list_done) and os.path.isdir(path_clips + frames + clip_name)]
 
 
-from menpo.feature import fast_dsift
-features = fast_dsift
-patch_shape = (18, 18)
-crop = 0.2  # crop when loading images from databases.
-pix_thres = 250
-fitter = []
-# gn-dpm params
-scales = (1, .5)
-# alg_cls = fit_alg
-sampling_step = 2
-sampling_mask = np.require(np.zeros(patch_shape), dtype=np.bool)
-sampling_mask[::sampling_step, ::sampling_step] = True
-# n_shape = [3, 12]; n_appearance = [50, 100]
-# n_shape = [5, 13]; n_appearance = [50, 100]
-
-
-def process_frame(frame_name, clip, img_type, loop=False):
+def process_frame(frame_name, clip, img_type, svm_p, loop=False):
     # loop: whether this is part of GN-DPM second fit
+    # svm_p: dictionary with all the info for applying svm
     global fitter
     name = frame_name[:frame_name.rfind('.')]
     p0 = clip.path_read_ln[0] + name + '_0.pts'
@@ -72,7 +83,7 @@ def process_frame(frame_name, clip, img_type, loop=False):
     if loop:  # if 2nd fit, then if landmark is 'approved', return. Otherwise proceed.
         try:
             ln = mio.import_landmark_file(p0)
-            copy2(p0, clip.path_write_ln + name + '_0.pts')
+            copy2(p0, clip.path_write_ln[0] + name + '_0.pts')
             return      # if the landmark already exists, return (for performance improvement)
         except ValueError:
             pass
@@ -90,10 +101,25 @@ def process_frame(frame_name, clip, img_type, loop=False):
         return
     im.landmarks['PTS2'] = ln
     fr = fitter.fit_from_shape(im, im.landmarks['PTS2'].lms, crop_image=0.3)
-    mio.export_landmark_file(fr.fitted_image.landmarks['final'], clip.path_write_ln + im.path.stem + '_0.pts', overwrite=True)
+    p_wr = clip.path_write_ln[0] + im.path.stem + '_0.pts'
+    mio.export_landmark_file(fr.fitted_image.landmarks['final'], p_wr, overwrite=True)
+
+    # apply SVM classifier by extracting patches (is face or not).
+    if not svm_p['apply']:
+        return
+    im.landmarks.clear()  # temp solution
+    im.landmarks['ps_pbaam'] = fr.fitted_image.landmarks['final']
+    im_cp = im.crop_to_landmarks_proportion(0.2, group='ps_pbaam')
+    im_cp = svm_p['feat'](im_cp)
+    im2 = warp_image_to_reference_shape(im_cp, svm_p['refFrame'], 'ps_pbaam')
+    _p_nd = im2.extract_patches_around_landmarks(group='source', as_single_array=True,
+                                                 patch_shape=svm_p['patch_s']).flatten()
+    if svm_p['clf'].decision_function(_p_nd) > 0:
+        copy2(p_wr, clip.path_write_ln[1] + im.path.stem + '_0.pts')
 
 
-def process_clip(clip_name, paths, training_images, img_type, loop, mi=110, d_aam=130, n_s=None, n_a=None):
+def process_clip(clip_name, paths, training_images, img_type, loop, svm_params,
+                 mi=110, d_aam=130, n_s=None, n_a=None):
     # mi: max_images from clip, d_aam: diagonal of aam, n_s: n_shape, n_a: n_appearance
     global fitter
     # paths and list of frames
@@ -101,7 +127,8 @@ def process_clip(clip_name, paths, training_images, img_type, loop, mi=110, d_aa
     if not check_path_and_landmarks(frames_path, clip_name, paths['in_lns'] + clip_name):
         return False
     list_frames = sorted(os.listdir(frames_path))
-    pts_folder = mkdir_p(paths['out_lns'] + clip_name + sep)
+    pts_p = mkdir_p(paths['out_lns'] + clip_name + sep)
+    svm_p = mkdir_p(paths['out_svm'] + clip_name + sep)  # svm path
     
     # loading images from the clip
     training_detector = load_images(list(list_frames), frames_path, paths['in_lns'], clip_name,
@@ -109,9 +136,12 @@ def process_clip(clip_name, paths, training_images, img_type, loop, mi=110, d_aa
     
     print('\nBuilding Part based AAM for the clip {}.'.format(clip_name))
     aam = PatchAAM(training_detector, verbose=True, holistic_features=features, patch_shape=patch_shape,
-                   diagonal=d_aam, scales=scales)
+                   diagonal=d_aam, scales=(1, .5))
     del training_detector
 
+    sampling_step = 2
+    sampling_mask = np.zeros(patch_shape, dtype=np.bool)  # create the sampling mask
+    sampling_mask[::sampling_step, ::sampling_step] = True
     fitter = LucasKanadeAAMFitter(aam, lk_algorithm_cls=fit_alg, n_shape=n_s, n_appearance=n_a, sampling=sampling_mask)
     # save the AAM model (requires plenty of disk space for each model).
     aam.features = None
@@ -119,10 +149,19 @@ def process_clip(clip_name, paths, training_images, img_type, loop, mi=110, d_aa
     aam.features = features
     del aam
 
-    clip = Clip(clip_name, paths['clips'], frames, [paths['in_lns'], paths['in_fit_lns']], pts_folder)
-    Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, clip, img_type, loop) for frame_name in list_frames)
+    clip = Clip(clip_name, paths['clips'], frames, [paths['in_lns'], paths['in_fit_lns']], [pts_p, svm_p])
+    # [process_frame(frame_name, clip, img_type, svm_params,loop) for frame_name in list_frames];
+    Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, clip, img_type, svm_params,
+                                                          loop) for frame_name in list_frames)
     fitter = []  # reset fitter
     return True
+
+
+def warp_image_to_reference_shape(i, reference_frame, group):
+    transform = [PiecewiseAffine(reference_frame.landmarks['source'][None], i.landmarks[group][None])]
+    im2 = i.warp_to_mask(reference_frame.mask, transform[0])
+    im2.landmarks['source'] = reference_frame.landmarks['source']
+    return im2
 
 
 def _aux_read_public_images(path, max_images, training_images, crop=crop, pix_thres=pix_thres):
