@@ -38,7 +38,7 @@ visual = 0              # whether the landmarks should be exported during the pr
 img_type_out = '.png'   # extension (and type) of the images that will be exported
 pts_type_out = '.pts'
 
-list_done=[]            # clips that should not be processed
+list_done = []            # clips that should not be processed
 # list_done =['830386', '821238', '830183'];
 
 # definition of colours for visualisation

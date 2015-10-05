@@ -24,6 +24,7 @@ def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False
                     in_ln_fit_fol=None, max_helen=220, max_cl_e=60, n_shape=None, n_appearance=None,
                     out_ln_svm=None, patch_s_svm=(14, 14), pix_th_svm=170):
     """
+    Main function for the person specific (part-based) AAM.
     Processes a batch of clips in the same folder. Creates the dictionary with the paths, the SVM params,
     loads the images from public datasets and then calls the processing per clip.
     :param path_clips:      str: Base path that contains the frames/lns folders.

@@ -9,8 +9,8 @@ from joblib import Parallel, delayed
 
 if __name__ == '__main__':
     args = len(sys.argv)
-    # path_0 = check_initial_path(args, sys.argv)
-    path_0 = '/vol/atlas/homes/grigoris/company_videos/competition/sandbox/'
+    path_0 = check_initial_path(args, sys.argv)
+
     if 2 < args < 5:
         in_landmarks_test_fol = str(sys.argv[2]) + sep
         out_landmarks_fol = str(sys.argv[3]) + sep
@@ -152,6 +152,8 @@ def process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame):
         im_cp = im.copy()
         im_cp.landmarks['PTS'] = ln
         # im_cp.crop_to_landmarks_proportion_inplace(0.2);  im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
+
+
         im_cp = im_cp.crop_to_landmarks_proportion(0.2); im_cp = feat(im_cp) ############## ONLY IF THERE ARE 1,2 detections per image
         im2 = warp_image_to_reference_shape(im_cp, refFrame)
         _p_nd = im2.extract_patches_around_landmarks(group='source', as_single_array=True, patch_shape=patch_s).flatten()
@@ -169,9 +171,9 @@ def process_clip(clip_name, refFrame):
         return
 
     pts_folder = mkdir_p(path_fitted_aam + clip_name + sep)
-    [process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame) for frame_name in list_frames];
-    # Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
-    #                                                       clip_name, refFrame) for frame_name in list_frames)
+    # [process_frame(frame_name, frames_path, pts_folder, clip_name, refFrame) for frame_name in list_frames];
+    Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, frames_path, pts_folder,
+                                                          clip_name, refFrame) for frame_name in list_frames)
 
 
 def load_or_train_svm():

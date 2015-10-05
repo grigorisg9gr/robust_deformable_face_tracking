@@ -9,11 +9,16 @@ from joblib import Parallel, delayed
 from menpodetect.ffld2 import FFLD2Detector, train_ffld2_detector
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpo.landmark import LandmarkGroup
-import dlib
+from dlib import shape_predictor
 from cyffld2 import load_model
+
+predictor_dlib = shape_predictor(path_shape_pred)
+negative_images = [i.as_greyscale(mode='channel', channel=1) for i in mio.import_images('/vol/atlas/homes/pts08/non_person_images',normalise=False, max_images=300)]
+detector = []
 
 
 def main_for_ps_detector(path_clips, in_bb_fol, out_bb_fol, out_model_fol, out_landmarks_fol, overwrite=False):
+
     # define a dictionary for the paths
     paths = {}
     paths['clips'] = path_clips
@@ -28,13 +33,9 @@ def main_for_ps_detector(path_clips, in_bb_fol, out_bb_fol, out_model_fol, out_l
 
     print_fancy('Training person specific model with FFLD')
     list_clips = sorted(os.listdir(path_clips + frames))
-    img_type = check_img_type(list_clips, path_clips + frames)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
+    img_type = check_img_type(list_clips, path_clips + frames)
     [process_clip(clip_name, paths, img_type, overwrite=overwrite) for clip_name in list_clips];
 
-
-predictor_dlib = dlib.shape_predictor(path_shape_pred)
-negative_images = [i.as_greyscale(mode='channel', channel=1) for i in mio.import_images('/vol/atlas/homes/pts08/non_person_images',normalise=False, max_images=300)]
-detector = []
 
 def detection_to_pointgraph(detection):
     return PointCloud(np.array([(p.y, p.x) for p in detection.parts()]))

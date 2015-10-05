@@ -26,11 +26,11 @@ if __name__ == '__main__':
         out_landmarks_fol = '6_pbaam/'
 
 
-from menpo.feature import fast_dsift
-features = fast_dsift
-patch_shape = (18, 18)
-crop_reading = 0.2
-pix_thres = 250
+# from menpo.feature import fast_dsift
+# features = fast_dsift
+# patch_shape = (18, 18)
+# crop_reading = 0.2
+# pix_thres = 250
 
 path_clips   = path_0 + frames 
 path_init_sh = path_0 + in_landmarks_fol
@@ -58,20 +58,20 @@ def process_frame(frame_name, clip_name, pts_folder, frames_path):
         ln = mio.import_landmark_file(path_read_sh + clip_name + '/' + name + '_0.pts')
     except:
         return
-    im = im_read_greyscale(frame_name, frames_path, img_type)
-    if im is []:
-        return
-    im.landmarks['PTS2'] = ln
-    fr = fitter.fit_from_shape(im, im.landmarks['PTS2'].lms, crop_image=0.3)
-    res_im = fr.fitted_image
-    mio.export_landmark_file(res_im.landmarks['final'], pts_folder + name + '_0.pts', overwrite=True)
+    # im = im_read_greyscale(frame_name, frames_path, img_type)
+    # if im is []:
+    #     return
+    # im.landmarks['PTS2'] = ln
+    # fr = fitter.fit_from_shape(im, im.landmarks['PTS2'].lms, crop_image=0.3)
+    # res_im = fr.fitted_image
+    # mio.export_landmark_file(res_im.landmarks['final'], pts_folder + name + '_0.pts', overwrite=True)
 
 
 
-scales = (1, .5)
-sampling_step = 2
-sampling_mask = np.require(np.zeros(patch_shape), dtype=np.bool)
-sampling_mask[::sampling_step, ::sampling_step] = True
+# scales = (1, .5)
+# sampling_step = 2
+# sampling_mask = np.require(np.zeros(patch_shape), dtype=np.bool)
+# sampling_mask[::sampling_step, ::sampling_step] = True
 n_shape = [5, 13]; n_appearance = [50, 100]
 
 
@@ -81,14 +81,14 @@ def process_clip(clip_name):
     # paths and list of frames
     frames_path = path_clips + clip_name + '/'
     list_frames = sorted(os.listdir(frames_path))
-    if not check_path_and_landmarks(frames_path, clip_name, path_init_sh + clip_name): # check that paths, landmarks exist
+    if not check_path_and_landmarks(frames_path, clip_name, path_init_sh + clip_name):
         return
     pts_folder = path_fitted_aam + clip_name + '/'; mkdir_p(pts_folder)
     
     # loading images from the clip
     training_detector = load_images(list_frames, frames_path, path_init_sh, clip_name,
-                                    training_images=list(training_images), max_images=250)  # make a new list of the concatenated images
-    list_frames = sorted(os.listdir(frames_path)) # re-read frames, in case they are cut, re-arranged in loading
+                                    training_images=list(training_images), max_images=250)
+    list_frames = sorted(os.listdir(frames_path))  # re-read frames, in case they are cut, re-arranged in loading
     
     print('\nBuilding Part based AAM for the clip ' + clip_name)
     # aam = PartsAAMBuilder(parts_shape=patch_shape, features=features, diagonal=180,
@@ -104,11 +104,12 @@ def process_clip(clip_name):
 
     Parallel(n_jobs=-1, verbose=4)(delayed(process_frame)(frame_name, clip_name, 
                                                           pts_folder, frames_path) for frame_name in list_frames)
-    fitter =[]  # reset fitter
+    fitter = []  # reset fitter
 
 
 list_clips = sorted(os.listdir(path_clips))
-img_type = check_img_type(list_clips, path_clips)  # assumption that all clips have the same extension, otherwise run in the loop for each clip separately.
+# assumption that all clips have the same extension, otherwise run in the loop for each clip separately:
+img_type = check_img_type(list_clips, path_clips)
 [process_clip(clip_name) for clip_name in list_clips 
  if not(clip_name in list_done)]
 
