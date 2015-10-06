@@ -13,7 +13,6 @@ from dlib import shape_predictor
 from cyffld2 import load_model
 
 predictor_dlib = shape_predictor(path_shape_pred)
-negative_images = [i.as_greyscale(mode='channel', channel=1) for i in mio.import_images('/vol/atlas/homes/pts08/non_person_images',normalise=False, max_images=300)]
 detector = []
 
 
@@ -34,7 +33,9 @@ def main_for_ps_detector(path_clips, in_bb_fol, out_bb_fol, out_model_fol, out_l
     print_fancy('Training person specific model with FFLD')
     list_clips = sorted(os.listdir(path_clips + frames))
     img_type = check_img_type(list_clips, path_clips + frames)
-    [process_clip(clip_name, paths, img_type, overwrite=overwrite) for clip_name in list_clips];
+    negative_images = [i.as_greyscale(mode='channel', channel=1) for i in mio.import_images('/vol/atlas/homes/pts08/non_person_images',
+                                                                                            normalise=False, max_images=300)]
+    [process_clip(clip_name, paths, img_type, negative_images, overwrite=overwrite) for clip_name in list_clips];
 
 
 def detection_to_pointgraph(detection):
@@ -65,7 +66,7 @@ def predict_in_frame(frame_name, clip, img_type):
                                  clip.path_write_ln[1] + pts_end, overwrite=True)
 
 
-def process_clip(clip_name, paths, img_type, overwrite=True):
+def process_clip(clip_name, paths, img_type, negative_images, overwrite=True):
     # overwrite: overwrite the training of the FFLD model.
     print(clip_name)
     frames_path = paths['clips'] + frames + clip_name + sep

@@ -1,4 +1,4 @@
-import os
+from os.path import sep, isdir
 import sys
 from utils.pipeline_aux import check_initial_path
 from dlib_predictor import main_for_generic_detector
@@ -7,7 +7,7 @@ from ps_pbaam import main_for_ps_aam
 from visualise_landmarks import main_call_visualisations
 from visualisations_to_videos import main_call_visualisation_to_videos
 
-s = os.path.sep  # OS separator
+s = sep  # OS separator
 
 #######################################################
 #######################################################
@@ -25,6 +25,8 @@ s_7 = '7_svm_faces' + s
 
 
 def run_main(path_clips):
+    if not isdir(path_clips):
+        raise RuntimeError('This path ({}) does not exist, returning.'.format(path_clips))
     # Step 1: Generic detector
     main_for_generic_detector(path_clips, s_1, s_1_pr)
     # Step 2: Person specific detector (train and apply)

@@ -1,7 +1,11 @@
 import sys
-import os
+from os.path import join, isdir, sep
+from os import listdir
 from mock import patch
 from nose.tools import raises
+
+fake_path = join('tmp', 'file_fake', '')
+
 
 def random_string_gen(range1=12):
     import string
@@ -28,13 +32,13 @@ def captured_output():
 
 def init_imports():
     try:
-        import os, shutil, errno
-        import menpo, menpodetect, menpofit
+        import errno
+        import menpo
+        import menpodetect
+        import menpofit
         return 1
-    except:
+    except ImportError:
         return -1
-
-fake_path = '/tmp/test.fake/'
 
 
 def test_init_functions():
@@ -54,10 +58,9 @@ def test_init_functions():
     # tt = check_if_path(fake_path, '')
     # mock1.assert_called_once_with(fake_path)
 
-from .pipeline_aux import *
-# @patch.object(pipeline_aux, 'load_images')
-def test_pipeline_aux():
-# def test_pipeline_aux(mock_load):
+
+def test_crop_rescale_img():
+    from .pipeline_aux import crop_rescale_img
     from menpo.image import Image
     import numpy as np
     from menpo.shape import PointCloud
@@ -74,35 +77,36 @@ def test_pipeline_aux():
     res_im3 = crop_rescale_img(test_img.copy(), crop_reading=1, pix_thres=400)     # test that the image remains the same
     assert(res_im3.shape[1] > test_img.shape[1]-3)
 
+
+def test_pipeline_aux():
+# @patch.object(pipeline_aux, 'load_images')
+# def test_pipeline_aux(mock_load):
+    from .pipeline_aux import check_img_type, load_images
     with patch('sys.stdout', new=StringIO()) as fake_out:                          # check_img_type for non valid path
         check_img_type(['greg', 'l1', 'm1'], fake_path)
         assert('valid path' in fake_out.getvalue())
 
-    # print(os.listdir('.'))
-    # with captured_output() as (out, err):
-    #     load_images(os.listdir('.'), fake_path, fake_path, '', max_images=-5) # check for negative images
-    #     output = out.getvalue().strip()
-    #     assert('negative' in output)
-    # print(output)
-
-
 
 def test_pipeline_aux_load_images():
+    from .pipeline_aux import load_images
     with patch('sys.stdout', new=StringIO()) as fake_out:
-        load_images(os.listdir('.'), '.', '.', '', max_images=-5)  # check for negative number of images
+        # check for negative number of images as max_images
+        load_images(listdir('.'), '.', '.', '', max_images=-5)
         assert('negative' in fake_out.getvalue())
-        assert('Ignoring' in fake_out.getvalue())                 # since python files are here, at least once it should fail to read an image
+        # since python files (*.py) are here, it will fail reading an image at least once.
+        assert('Ignoring' in fake_out.getvalue())
 
     with patch('sys.stdout', new=StringIO()) as fake_out:         # check for positive number of images
-        load_images(os.listdir('.'), '.', '.', '', max_images=5)
+        load_images(listdir('.'), '.', '.', '', max_images=5)
         assert('negative' not in fake_out.getvalue())
 
     with patch('sys.stdout', new=StringIO()) as fake_out:         # check for not valid path
-        if not os.path.isdir(fake_path):
-            ret = load_images(os.listdir('.'), fake_path, fake_path, '', max_images=5)
+        if not isdir(fake_path):
+            ret = load_images(listdir('.'), fake_path, fake_path, '', max_images=5)
             print(fake_out)
             assert('not a valid path' in fake_out.getvalue())
             assert(ret == [])
+
 
 @raises(AssertionError)
 def test_strip_separators_in_the_end_error():
@@ -113,11 +117,11 @@ def test_strip_separators_in_the_end_error():
 def test_strip_separators_in_the_end():
     from ..utils import strip_separators_in_the_end
     name = 'fake1'
-    name1 = name + os.path.sep
+    name1 = name + sep
     assert(name == strip_separators_in_the_end(name1))  # one sep in the end
     assert(name == strip_separators_in_the_end(name))  # no sep in the end
 
-    name1 += os.path.sep*3
+    name1 += sep*3
     assert(name == strip_separators_in_the_end(name1))  # several sep in the end
 
     assert('' == strip_separators_in_the_end(''))  # several sep in the end
