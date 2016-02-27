@@ -1,5 +1,5 @@
 
-This is the code accompanying the paper [`Offline Deformable Face Tracking in Arbitrary Videos`, ICCV 2015 Workshops.](http://ibug.doc.ic.ac.uk/media/uploads/documents/shen_the_first_facial_iccv_2015_paper.pdf)
+This is the code accompanying the paper [`Offline Deformable Face Tracking in Arbitrary Videos`, ICCV 2015 Workshops.](http://ibug.doc.ic.ac.uk/media/uploads/documents/paper_offline.pdf)
 To use the code you can call the whole pipeline by calling the run_pipeline.py with the path of the videos.
 Probably you need to adapt the paths in `utils/path_and_folder_definition.py` to fit your system.
 
