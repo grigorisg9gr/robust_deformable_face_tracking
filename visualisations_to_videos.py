@@ -6,9 +6,12 @@ from utils import (check_if_path, remove_empty_folders)
 
 
 # import the function that reads frames and converts them to videos
-sys.path.append('/vol/atlas/homes/grigoris/gits/pyutils/')
-import frames2videos as fr2vid
-import resize_image as rim
+#sys.path.append('/vol/atlas/homes/grigoris/gits/pyutils/')
+#import frames2videos as fr2vid
+#import resize_image as rim
+# requires the package from https://github.com/grigorisg9gr/pyutils
+from research_pyutils.frames2videos import main as fr2vid_main
+from research_pyutils.resize_image import bulkResize
 
 
 def main_call_visualisation_to_videos(path_0, overwrite):
@@ -45,7 +48,7 @@ def call_video_maker(path_clips, vid_fold, overwrite=False):
         if len(listdir(p1)) == 0:
             continue
         try:
-            rim.bulkResize(p1)
+            bulkResize(p1)
         except TypeError as e:
             print('Probably there is a folder with no images {}, skipping it.'.format(p1))
             print(e)
@@ -54,7 +57,7 @@ def call_video_maker(path_clips, vid_fold, overwrite=False):
             print('Probably image not found, skipping this video.')
             print(e)
             continue
-        fr2vid.main(p1, vid_fold=vid_fold)
+        fr2vid_main(p1, vid_fold=vid_fold)
     remove_empty_folders(path_clips)
 
 

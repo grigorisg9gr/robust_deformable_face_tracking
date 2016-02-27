@@ -179,7 +179,7 @@ def process_clip(clip_name, paths, training_images, img_type, loop, svm_params,
     
     print('\nBuilding Part based AAM for the clip {}.'.format(clip_name))
     aam = PatchAAM(training_detector, verbose=True, holistic_features=features, patch_shape=patch_shape,
-                   diagonal=d_aam, scales=(1, .5))
+                   diagonal=d_aam, scales=(.5, 1))
     del training_detector
 
     sampling_step = 2
