@@ -1,9 +1,7 @@
-__author__ = 'gchrysos'
+from os.path import sep, isdir
 # definition of paths and folders useful for the pipeline.
 # Change with caution, as changes will be reflected to the whole pipeline.
 
-import os
-sep = os.path.sep  # separator (should be '/' for Linux and '\' for Windows).
 
 __p_base_db = '/vol/atlas/databases/'
 _p_base_personal = '/vol/atlas/homes/grigoris/'
@@ -17,12 +15,16 @@ path_pascal_base = _p_base_personal + 'external/VOCdevkit/VOC2007/'
 path_closed_eyes = _p_base_personal + 'Databases/eyes/grigoris_competition_8_2015/frames/'
 
 path_pickles = _p_base_personal + 'company_videos/pickles/'
-path_shape_pred = _p_base_personal + 'raps_menpo/shape_predictor_68_face_landmarks.dat' # predictor data trained to be used from dlib shape predictor
+# predictor data trained to be used from dlibERT shape predictor
+path_shape_pred = _p_base_personal + 'raps_menpo/shape_predictor_68_face_landmarks.dat'
 
 # confirm that the ones above are valid paths
-from utils import check_if_path
+
 def __db_p(path, db_name):
-    return check_if_path(path, 'The database {} is not in the path provided ({}).'.format(db_name, path))
+    dec = isdir(path)
+    if not dec:
+        print('The database {} is not in the path provided ({}).'.format(db_name, path))
+    return dec
 
 if not (__db_p(path_to_helen, 'helen') and __db_p(path_to_ibug, 'ibug') and __db_p(path_pascal_base, 'pascal'))\
         and (__db_p(path_to_lfpw, 'lfpw')):

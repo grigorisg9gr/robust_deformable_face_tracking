@@ -23,7 +23,8 @@ def _render(im, pts_names, fig, colours, markersizes, edgesizes, figure_size):
     return renderer
 
 
-def _aux(im, pts_paths, pts_names, pts_formats, save_path, save_original, off1, off2, figure_size, overwrite, render_options, only_ln=False):
+def _aux(im, pts_paths, pts_names, pts_formats, save_path, save_original, off1, off2,
+         figure_size, overwrite, render_options, only_ln=False):
     if only_ln:  # case of visualising only landmarks (black background)
         path_tmp = im.path
         im = Image.init_blank([im.shape[0], im.shape[1]], im.n_channels)
@@ -83,9 +84,10 @@ def generate_frames_max_bbox(frames_path, frames_format, pts_paths, pts_formats,
             raise IndexError()
     except IndexError:
         if len(pts_paths) > 0:
-            print('The directory of landmarks (%s) is empty, returning' % pts_paths[0])
+            ms = 'The directory of landmarks {} is empty, returning.'
+            print(ms.format(pts_paths[0]))
         return
-    for s in mio.import_landmark_files(pts_paths[0] + '*.pts', verbose=verbose):
+    for s in mio.import_landmark_files(pts_paths[0] + '*' + pts_formats[0], verbose=verbose):
         min_b, max_b = s.lms.bounds()
         bounds_x.append(max_b[0] - min_b[0])
         bounds_y.append(max_b[1] - min_b[1])
