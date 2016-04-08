@@ -32,8 +32,8 @@ def main_for_generic_detector(path_clips, out_bb_fol, out_landmarks_fol):
     paths['out_lns'] = path_clips + out_landmarks_fol
 
     # Log file output.
-    # TODO: parse the name of the function instead of hardcoding the name of the log. 
-    log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_1_dlib.log'
+    log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + \
+          '_' + basename(__file__) + '.log'
     sys.stdout = Logger(log)
 
     # iterates over all clips in the folder and calls sequentially the function process_clip

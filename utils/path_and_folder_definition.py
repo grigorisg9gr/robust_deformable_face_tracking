@@ -17,6 +17,8 @@ path_closed_eyes = _p_base_personal + 'Databases/eyes/grigoris_competition_8_201
 path_pickles = _p_base_personal + 'company_videos/pickles/'
 # predictor data trained to be used from dlibERT shape predictor
 path_shape_pred = _p_base_personal + 'raps_menpo/shape_predictor_68_face_landmarks.dat'
+# non person images (used as negative for person specific detector training
+path_non_person_images = '/vol/atlas/homes/pts08/non_person_images/'
 
 # confirm that the ones above are valid paths
 
@@ -26,8 +28,9 @@ def __db_p(path, db_name):
         print('The database {} is not in the path provided ({}).'.format(db_name, path))
     return dec
 
-if not (__db_p(path_to_helen, 'helen') and __db_p(path_to_ibug, 'ibug') and __db_p(path_pascal_base, 'pascal'))\
-        and (__db_p(path_to_lfpw, 'lfpw')):
+if not (__db_p(path_to_helen, 'helen') and __db_p(path_to_ibug, 'ibug')
+        and __db_p(path_pascal_base, 'pascal')) and __db_p(path_to_lfpw, 'lfpw')\
+        and __db_p(path_non_person_images, 'non person images'):
     print('Potential problem if one of the databases are not in the path provided.')
 
 
@@ -62,4 +65,5 @@ import sys
 import numpy as np
 import glob
 from datetime import datetime
+from os.path import basename
 

@@ -54,6 +54,17 @@ def for_each_landmark_folder(fold_landm, save_path_0, path_related, viewing_opti
 
 
 def simple_visualise(path_related, viewing_options, only_ln=False):
+    """
+    Calls the simple visualisation method for exporting images with landmarks.
+    Specifically, it exports each image with one landmark group. It does so
+    iteratively for all the folders provided.
+    It expects two dictionaries as defined in the function main_call_visualisations().
+    :param path_related: (dict) Contains the path related definitions.
+    :param viewing_options: (dict) Contains the viewing options.
+    :param only_ln: (Bool, optional) Optional param for visualising only the landmarks
+           in a black background. If False (default) the image is visualised as well.
+    :return:
+    """
     print('Simple visualisation of individual landmark techniques was chosen.')
     save_path_0 = path_related['path_clips'] + foldvis + sep
     for landm in path_related['list_landm']:
@@ -63,6 +74,14 @@ def simple_visualise(path_related, viewing_options, only_ln=False):
 
 
 def ln_folder_existence(list_landm, path_clips):
+    """
+    Given a list of folders and an original path, it checks which of
+    those actually exist as folders (dirs). If they do exist, they are
+    appended in a new list that is returned.
+    :param list_landm: (list) List of folders to check.
+    :param path_clips: (string) Base path which should contain the folders.
+    :return: (list) List of the valid folders.
+    """
     list_landm_f = []
     for landm in list_landm:
         if not isdir(join(path_clips, landm)):
@@ -90,7 +109,15 @@ def output_folder_name(list_landm_f, save_path_1):
 
 
 def compare_main(path_related, viewing_options):
-    # main method for comparing landmarks. Old compare_landmarks.py option.
+    """
+    Calls the comparison method for exporting images with landmarks.
+    Specifically, it exports images with all the landmark groups
+    overlaid in the same image for comparison reasons.
+    It expects two dictionaries as defined in the function main_call_visualisations().
+    :param path_related: (dict) Contains the path related definitions.
+    :param viewing_options: (dict) Contains the viewing options.
+    :return:
+    """
     print('Comparison method was chosen.')
     save_path_1 = join(path_related['path_clips'], foldvis, foldcmp, '')
     list_landm_f = ln_folder_existence(path_related['list_landm'], path_related['path_clips'])

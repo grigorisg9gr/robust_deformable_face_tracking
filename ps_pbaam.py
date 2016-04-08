@@ -76,7 +76,8 @@ def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False
         svm_params['refFrame'] = joblib.load(path_pickle_svm + name_p + '_refFrame.pkl')
 
     # Log file output.
-    log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + '_4_gndpm.log'
+    log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + \
+          '_' + basename(__file__) + '.log'
     sys.stdout = Logger(log)
 
     print_fancy('Building GN-DPMs for the clips')
