@@ -5,7 +5,6 @@ from utils.pipeline_aux import (check_img_type, im_read_greyscale, check_initial
 from utils.clip import Clip
 import numpy as np
 from menpo.shape import PointCloud
-from joblib import Parallel, delayed
 from menpodetect.ffld2 import FFLD2Detector, train_ffld2_detector
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpo.landmark import LandmarkGroup
@@ -21,10 +20,13 @@ def main_for_ps_detector(path_clips, in_bb_fol, out_bb_fol, out_model_fol, out_l
     # define a dictionary for the paths
     paths = {}
     paths['clips'] = path_clips
-    paths['in_bb'] = path_clips + in_bb_fol  # existing bbox of detection
-    paths['out_bb'] = path_clips + out_bb_fol       # save bbox of detection
+    # existing bbox of detection
+    paths['in_bb'] = path_clips + in_bb_fol
+    # save bbox of detection
+    paths['out_bb'] = path_clips + out_bb_fol
     paths['out_lns'] = path_clips + out_landmarks_fol
-    paths['out_model'] = mkdir_p(path_clips + out_model_fol)  # path that trained models will be saved.
+    # path that trained models will be saved.
+    paths['out_model'] = mkdir_p(path_clips + out_model_fol)
 
     # Log file output.
     log = mkdir_p(path_clips + 'logs' + sep) + datetime.now().strftime("%Y.%m.%d.%H.%M.%S") + \
@@ -37,7 +39,8 @@ def main_for_ps_detector(path_clips, in_bb_fol, out_bb_fol, out_model_fol, out_l
     negative_images = [i.as_greyscale(mode='channel', channel=1)
                        for i in mio.import_images(path_non_person_images,
                                                   normalise=False, max_images=300)]
-    [process_clip(clip_name, paths, img_type, negative_images, overwrite=overwrite) for clip_name in list_clips];
+    [process_clip(clip_name, paths, img_type, negative_images, overwrite=overwrite)
+     for clip_name in list_clips];
 
 
 def detection_to_pointgraph(detection):
@@ -49,6 +52,9 @@ def predict_in_frame(frame_name, clip, img_type):
     im = im_read_greyscale(frame_name, clip.path_frames, img_type, normalise=False)
 
     res_dlib = detector(im)
+    # in the following lines a hack to figure out whether there are more than
+    # 10 detections returned. In such a case, there should be two digits in
+    # each group.
     num_res = len(res_dlib)
     if num_res == 0:
         return
@@ -57,7 +63,11 @@ def predict_in_frame(frame_name, clip, img_type):
         num1 = 2
     s1 = '%0' + str(num1)
     im_pili = np.array(im.as_PILImage())
-    for kk in range(0, 1):   # num_res to keep all, here keeping ONLY the most confident one
+    # loop over the returned detections.
+    # By restricting the range below, we can choose the
+    # k first (more confident) bounding boxes.
+    # num_res to keep all, here keeping ONLY the most confident one
+    for kk in range(0, 1):
         pts_end = im.path.stem + '_' + str(kk) + pts_type_out
         ln = im.landmarks['ffld2_' + (s1 + 'd') % kk]
         mio.export_landmark_file(ln, clip.path_write_ln[0] + pts_end, overwrite=True)
@@ -77,7 +87,7 @@ def process_clip(clip_name, paths, img_type, negative_images, overwrite=True):
     list_frames = sorted(os.listdir(frames_path))
     save_model = paths['out_model'] + clip_name + '.model'
     if (not os.path.exists(save_model)) or overwrite:
-        # build the detector
+        # build the person specific detector. Firstly, load the images.
         training_pos = load_images(list_frames, frames_path, paths['in_bb'], clip_name, max_images=400)
         if len(training_pos) == 0:
             print('No positives found for the clip {}, skipping it.'.format(clip_name))

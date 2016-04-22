@@ -1,18 +1,20 @@
 
-from menpo.io import export_landmark_file
 from utils import mkdir_p, check_if_path, Logger
 from utils.path_and_folder_definition import *  # import paths for databases, folders and libraries
 from utils.pipeline_aux import (check_img_type, im_read_greyscale, check_initial_path)
 from utils.clip import Clip
 from dlib import shape_predictor
+from menpo.io import export_landmark_file
+from menpo.shape import PointCloud
 from menpodetect.dlib.conversion import pointgraph_to_rect
 from menpodetect import load_dlib_frontal_face_detector
-from menpo.shape import PointCloud
-from menpo.landmark import LandmarkGroup
 from joblib import Parallel, delayed
 
 dlib_init_detector = load_dlib_frontal_face_detector()
 predictor_dlib = shape_predictor(path_shape_pred)
+# define a lambda function that accepts the image, along with the bounding box
+# and returns the landmark localisation outcome.
+f = lambda imp, ln_g: detection_to_pointgraph(predictor_dlib(imp, pointgraph_to_rect(ln_g)))
 
 
 def main_for_generic_detector(path_clips, out_bb_fol, out_landmarks_fol):
@@ -53,14 +55,18 @@ def detect_in_frame(frame_name, clip, img_type):
     if not im:
         print(frame_name, clip.path_frames)
         return
-    res_dlib = dlib_init_detector(im, group_prefix='dlib')  # call dlib detector
+    res_dlib = dlib_init_detector(im, group_prefix='dlib')
     im_pili = np.array(im.as_PILImage())
     for kk, g in enumerate(im.landmarks.group_labels):
-        pts_end = im.path.stem + '_' + str(kk) + pts_type_out  # define the ending of each pts that will be exported
+        # define the ending of each pts that will be exported
+        pts_end = im.path.stem + '_' + str(kk) + pts_type_out
         export_landmark_file(im.landmarks[g], clip.path_write_ln[0] + pts_end, overwrite=True)
         # from bounding box to points (dlib predictor)
-        init_pc = detection_to_pointgraph(predictor_dlib(im_pili, pointgraph_to_rect(im.landmarks[g].lms)))
-        export_landmark_file(LandmarkGroup.init_with_all_label(init_pc), clip.path_write_ln[1] + pts_end, overwrite=True)
+        # even though the landmark points are not strictly required in this step, since in
+        # the next step, we are going to use the bounding boxes for the person, specific
+        # detection, you can export them (or not), by (un-)commenting the three lines below.
+        im.landmarks['_tmp'] = f(im_pili, im.landmarks[g].lms)
+        export_landmark_file(im.landmarks['_tmp'], clip.path_write_ln[1] + pts_end, overwrite=True)
 
 
 def process_clip(clip_name, paths, img_type):
@@ -79,17 +85,26 @@ def process_clip(clip_name, paths, img_type):
     """
     frames_path = paths['clips'] + frames + clip_name + sep
     list_frames = sorted(os.listdir(frames_path))
-    if not check_if_path(frames_path, 'Skipped clip ' + clip_name + ' because its path of frames is not valid.'):
+    if not isdir(frames_path):
+        ms1 = 'The frames folder {} does not seem to exist. Skipping the clip.'
+        print(ms1.format(frames_path))
         return
     print(clip_name)
+    # define the output paths and make their directories.
     p_det_bb = mkdir_p(paths['out_bb'] + clip_name + sep)
     p_det_landm = mkdir_p(paths['out_lns'] + clip_name + sep)
     clip = Clip(clip_name, paths['clips'], frames, write_ln=[p_det_bb, p_det_landm])
 
-    Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip, img_type) for frame_name in list_frames);
+    Parallel(n_jobs=-1, verbose=4)(delayed(detect_in_frame)(frame_name, clip, img_type)
+                                   for frame_name in list_frames);
 
 
 if __name__ == '__main__':
+    # in case it is called directly through the terminal.
+    # expected input:
+    #   1) path base (frames, and output landmarks will be written there).
+    #   2) (optional) output name for bounding box folders.
+    #   3) (optional) output name for landmark files folders.
     args = len(sys.argv)
     path_clips_m = check_initial_path(args, sys.argv)
 

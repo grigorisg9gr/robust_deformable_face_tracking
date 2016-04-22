@@ -35,6 +35,13 @@ Explanation of the different pipeline files:
 * ffld2.py: Trains a person specific detector. It utilises the input bounding boxes of the previous step to train the model and then detects using that model. Additionally, it applies the same shape predictor as in dlib_predictor.py.
 * ps_pbaam.py: Trains a generic + adaptive part-based AAM and then fits it on the person.
 
+
+If you run run_pipeline.py:
+
+A number of frames are expected to be found for each video with potentially one person showing in these videos. For the frames that a person is found, a pts file will be exported per frame. That is, for each step there will be a pts exported for comparison reasons. 
+
+If more people appear in the video, then this might cause confusion in the person specific models, since there is no prediction over spatial consistency, most of the steps rely on the most confident detection.
+
 #### **Dependency**
 Apart from menpo [(menpo, menpodetect, menpofit)](https://github.com/menpo/menpo) the following packages are used:
 * joblib ``` pip install joblib```

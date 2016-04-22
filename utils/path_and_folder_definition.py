@@ -32,6 +32,9 @@ if not (__db_p(path_to_helen, 'helen') and __db_p(path_to_ibug, 'ibug')
         and __db_p(path_pascal_base, 'pascal')) and __db_p(path_to_lfpw, 'lfpw')\
         and __db_p(path_non_person_images, 'non person images'):
     print('Potential problem if one of the databases are not in the path provided.')
+    # the databasees above are used in the following two steps: a) in the person
+    # specific detector (using the negatives), b) in the person specific landmark
+    # localisation method (AAM), in which they are used to learn the generic part.
 
 
 # folders for reading and writing in the project clips
@@ -60,10 +63,12 @@ render_options = {'colours':    [colour,
 
 
 # common imports for all files
+# Even though it is a bit annoying, these are common imports for several files,
+# thus they are put here.
 import os
 import sys
 import numpy as np
 import glob
 from datetime import datetime
-from os.path import basename
+from os.path import basename, isdir
 
