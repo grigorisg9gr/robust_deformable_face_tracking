@@ -10,7 +10,6 @@ from menpo.transform import PiecewiseAffine
 from menpo.feature import fast_dsift
 # imports for GN-DPM builder/fitter:
 from menpofit.aam import PatchAAM
-from menpofit.aam.algorithm import WibergForwardCompositional as fit_alg
 from menpofit.aam import LucasKanadeAAMFitter
 
 features = fast_dsift
@@ -129,15 +128,17 @@ def process_frame(frame_name, clip, img_type, svm_p, loop=False):
     if not im:
         return
     im.landmarks['PTS2'] = ln
-    fr = fitter.fit_from_shape(im, im.landmarks['PTS2'].lms, crop_image=0.3)
+    # fitting can be faster if the image is cropped in advance, though
+    # you should save the transform to get back to the original shape,
+    # hence here we just leave the original image.
+    fr = fitter.fit_from_shape(im, im.landmarks['PTS2'].lms)
     p_wr = clip.path_write_ln[0] + im.path.stem + '_0.pts'
-    export_landmark_file(fr.fitted_image.landmarks['final'], p_wr, overwrite=True)
+    im.landmarks['ps_pbaam'] = fr.final_shape
+    export_landmark_file(im.landmarks['ps_pbaam'], p_wr, overwrite=True)
 
     # apply SVM classifier by extracting patches (is face or not).
     if not svm_p['apply']:
         return
-    im.landmarks.clear()  # temp solution
-    im.landmarks['ps_pbaam'] = fr.fitted_image.landmarks['final']
     im_cp = im.crop_to_landmarks_proportion(0.2, group='ps_pbaam')
     im_cp = svm_p['feat'](im_cp)
     im2 = warp_image_to_reference_shape(im_cp, svm_p['refFrame'], 'ps_pbaam')
@@ -183,14 +184,10 @@ def process_clip(clip_name, paths, training_images, img_type, loop, svm_params,
                    diagonal=d_aam, scales=(.5, 1))
     del training_detector
 
-    sampling_step = 2
-    sampling_mask = np.zeros(patch_shape, dtype=np.bool)  # create the sampling mask
-    sampling_mask[::sampling_step, ::sampling_step] = True
-    fitter = LucasKanadeAAMFitter(aam, lk_algorithm_cls=fit_alg, n_shape=n_s, n_appearance=n_a, sampling=sampling_mask)
+    fitter = LucasKanadeAAMFitter(aam, n_shape=n_s, n_appearance=n_a)
     # save the AAM model (requires plenty of disk space for each model).
     aam.features = None
     export_pickle(aam, paths['out_model'] + clip_name + '.pkl', overwrite=True)
-    aam.features = features
     del aam
 
     clip = Clip(clip_name, paths['clips'], frames, [paths['in_lns'], paths['in_fit_lns']], [pts_p, svm_p])

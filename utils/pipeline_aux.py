@@ -42,16 +42,15 @@ def crop_rescale_img(im, crop_reading=0.3, pix_thres=230):
     """
     try:
         im = im.crop_to_landmarks_proportion(crop_reading)
-    except AttributeError:   # temp till gn-dpm is officially in menpo.
-        im.crop_to_landmarks_proportion_inplace(crop_reading)
     except ValueError:
         print('The image has {} groups of landmarks, could not perform cropping.'.format(im.landmarks.n_groups))
         return im
     if im.n_channels == 3:                                   # convert images to greyscale if they are not
         im = im.as_greyscale(mode='luminosity')
-    if im.shape[0] > pix_thres or im.shape[1] > pix_thres:    # check that the images are not too big, otherwise resize them
+    # rescale if too big
+    if im.shape[0] > pix_thres or im.shape[1] > pix_thres:
         im = im.rescale_to_diagonal(pix_thres)
-    return im    # necessary to return
+    return im
 
 
 def check_path_and_landmarks(frames_path, clip_name, landmark_path):
