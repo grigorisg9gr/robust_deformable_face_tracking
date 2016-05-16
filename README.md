@@ -42,12 +42,23 @@ A number of frames are expected to be found for each video with potentially one 
 
 If more people appear in the video, then this might cause confusion in the person specific models, since there is no prediction over spatial consistency, most of the steps rely on the most confident detection.
 
+
+The pipeline includes the following steps:
+
+1) A generic face detector is run in a batch of clips. (Additionally, the landmarks of a generic land. loc. method are exported, but this is auxiliary). 
+
+2) A person specific detector is trained and fit in each clip. Based on that acquired bounding box, a generic landmark localisation method is applied. 
+
+3) Using the landmarks from the previous step, a person specific landmark localisation method (AAM) is trained and fit in the landmarks. (Optionally use an SVM as a failure checking method). 
+
+4) Re-train 3 with the improved landmarks and optionally apply the failure checker again. 
+
 #### **Dependency**
 Apart from menpo [(menpo, menpodetect, menpofit)](https://github.com/menpo/menpo) the following packages are used:
 * joblib ``` pip install joblib```
 * research_pyutils from [this repository](https://github.com/grigorisg9gr/pyutils).
 
-Additionally, for the predictor in the dlib_predictor.py, you need to provide a pre-trained model for landmark localisation. 
+Additionally, for the predictor in the dlib_predictor.py, you need to provide a pre-trained model for landmark localisation. You can optionally provide a path with a pre-trained SVM to work as a failure checker in the ps_pbaam.py part. 
 
 #### **Feedback**
 If you do have any questions or improvements, feel free to open issues here or contribute right away. Feedback is always appreciated.

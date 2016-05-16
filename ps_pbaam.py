@@ -26,6 +26,11 @@ def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False
     Main function for the person specific (part-based) AAM.
     Processes a batch of clips in the same folder. Creates the dictionary with the paths, the SVM params,
     loads the images from public datasets and then calls the processing per clip.
+
+    * SVM * : The part with the SVM is not required, this is an additional functionality
+    provided for pruning the landmarks not well localised. In other words, the SVM works
+    as a failure checker and is just a pre-trained classifier on images with landmarks.
+
     :param path_clips:      str: Base path that contains the frames/lns folders.
     :param in_ln_fol:       str: Folder name for importing landmarks.
     :param out_ln_fol:      str: Folder name for exporting landmarks after AAM fit.
@@ -56,6 +61,7 @@ def main_for_ps_aam(path_clips, in_ln_fol, out_ln_fol, out_model_fol, loop=False
     paths['out_svm'] = (path_clips + out_ln_svm) if out_ln_svm else None
 
     # save the svm params in a dict in case they are required.
+    # See the doc in the beginning of the function for SVM.
     svm_params = {}
     svm_params['apply'] = True if out_ln_svm else False  # True only if user provided path for output.
     # load pickled files for classifier and reference frame.
@@ -216,7 +222,8 @@ if __name__ == '__main__':
     if args > 3:
         in_landmarks_fol_m = str(sys.argv[2]) + sep
         out_landmarks_fol_m = str(sys.argv[3]) + sep
-        print(in_landmarks_fol_m, '   ', out_landmarks_fol_m)
+        ms = 'ln_in : {}   ln_out : {}.'
+        print(ms.format(in_landmarks_fol_m, out_landmarks_fol_m))
     else:
         in_landmarks_fol_m, out_landmarks_fol_m = '3_ffld_ln' + sep, '4_pbaam' + sep
     out_model_fol_m = strip_separators_in_the_end(out_landmarks_fol_m) + '_models' + sep
